@@ -4,7 +4,7 @@ from isaaclab.assets import ArticulationCfg
 import isaaclab.sim as sim_utils
 import math
 
-TRANSFORMER_USD = "/home/tatung/Desktop/Transform_bipedal/transformer_nam/asset/3DOFTrans.usd"
+TRANSFORMER_USD = "/home/tatung/Desktop/Transform_bipedal/transformer_nam/asset/NewSimple.usd"
 
 TRANSFORMER_CFG = ArticulationCfg(
     prim_path="{ENV_REGEX_NS}/Robot",
@@ -30,15 +30,15 @@ TRANSFORMER_CFG = ArticulationCfg(
         ),
     ),
     init_state=ArticulationCfg.InitialStateCfg(
-        pos=(0.0, 0.0, 0.392),
+        pos=(0.0, 0.0, 0.37),
         joint_pos={
             # ✅ ADD "_joint" suffix to match USD!
-            "Hipleft_joint": math.radians(-15),
-            "Kneeleft_joint": math.radians(30),
-            "Footleft_joint": math.radians(-15),
-            "Hipright_joint": math.radians(-15),
-            "Kneeright_joint": math.radians(30),
-            "Footright_joint": math.radians(-15),
+            "Hipleft_joint": math.radians(25),
+            "Kneeleft_joint": math.radians(-50),
+            "Footleft_joint": math.radians(25),
+            "Hipright_joint": math.radians(25),
+            "Kneeright_joint": math.radians(-50),
+            "Footright_joint": math.radians(25),
         },
         joint_vel={
             ".*": 0.0,

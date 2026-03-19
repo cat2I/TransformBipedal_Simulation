@@ -4,7 +4,7 @@ from isaaclab.assets import ArticulationCfg
 import isaaclab.sim as sim_utils
 import math
 
-TRANSFORMER_USD = "/home/tatung/Desktop/Transform_bipedal/transformer_nam/asset/Namtransformer.usd"
+TRANSFORMER_USD = "/home/tatung/Desktop/Transform_bipedal/transformer_nam/asset/FullForm.usd"
 
 TRANSFORMER_CFG = ArticulationCfg(
     prim_path="{ENV_REGEX_NS}/Robot",
@@ -30,17 +30,17 @@ TRANSFORMER_CFG = ArticulationCfg(
         ),
     ),
     init_state=ArticulationCfg.InitialStateCfg(
-        pos=(0.0, 0.0, 0.392),
+        pos=(0.0, 0.0, 0.37),
         joint_pos={
             # ✅ ADD "_joint" suffix to match USD!
             "Bubleft_joint": 0.0,
-            "Hipleft_joint": math.radians(15),
-            "Kneeleft_joint": math.radians(-30),
-            "Footleft_joint": math.radians(15),
+            "Hipleft_joint": math.radians(25),
+            "Kneeleft_joint": math.radians(-50),
+            "Footleft_joint": math.radians(25),
             "Bubright_joint": 0.0,
-            "Hipright_joint": math.radians(15),
-            "Kneeright_joint": math.radians(-30),
-            "Footright_joint": math.radians(15),
+            "Hipright_joint": math.radians(25),
+            "Kneeright_joint": math.radians(-50),
+            "Footright_joint": math.radians(25),
         },
         joint_vel={
             ".*": 0.0,
@@ -51,7 +51,7 @@ TRANSFORMER_CFG = ArticulationCfg(
         # ✅ STS3095 Servos (Bub, Hip, Knee) - 105 kg·cm
         # ============================================================
         "heavy_joints": DCMotorCfg(
-            joint_names_expr=["Bubleft_joint", "Bubright_joint", "Hipleft_joint", "Hipright_joint", 
+            joint_names_expr=["Bubleft_joint", "Hipleft_joint", "Bubright_joint", "Hipright_joint",
                              "Kneeleft_joint", "Kneeright_joint"],
             effort_limit=10.3,        # stall torque (N·m)
             effort_limit_sim=10.3,

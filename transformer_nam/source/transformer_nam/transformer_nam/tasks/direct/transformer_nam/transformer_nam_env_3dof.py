@@ -112,17 +112,17 @@ class TransformerWalkEnv(DirectRLEnv):
         # ✅ CHANGED: servo min/max for 6 joints only!
         # [Hip_L, Hip_R, Knee_L, Knee_R, Ankle_L, Ankle_R]
         self.servo_max = torch.tensor(
-            [90, 90, 140, 140, 93, 93],  # ✅ No Bub!
+            [35, 35, 85, 85, 45, 45],  # ✅ No Bub!
             device=self.device, dtype=torch.int
         )
         self.servo_min = torch.tensor(
-            [-90, -90, 0, 0, -93, -93],
+            [-35, -35, -85, -85, -45, -45],
             device=self.device, dtype=torch.int
         )
         
         # ✅ CHANGED: base_pose for 6 joints
         # [Hip_L, Hip_R, Knee_L, Knee_R, Ankle_L, Ankle_R]
-        start_pos = [-15, -15, 30, 30, -15, -15]  # ✅ No Bub!
+        start_pos = [25, 25, -50, -50, 25, 25]  # ✅ No Bub!
         self.base_pose = torch.tensor(
             [start_pos for _ in range(self.num_envs)], 
             device=self.device, dtype=torch.float32
@@ -188,8 +188,8 @@ class TransformerWalkEnv(DirectRLEnv):
 
         from isaaclab.sim.spawners.from_files import GroundPlaneCfg, spawn_ground_plane
         ground_cfg = RigidBodyMaterialCfg(
-            static_friction=1.0,
-            dynamic_friction=0.5,
+            static_friction=0.8,
+            dynamic_friction=0.4,
             restitution=0.05,
             friction_combine_mode="average",
         )
@@ -479,7 +479,7 @@ def height_reward(robot_root_pos):
 def joint_position_reward(pos_buff, start_pos, device: str):
     """Joint position reward - ✅ CHANGED: 6 joints!"""
     # ✅ CHANGED: max_diff for 6 joints [Hip, Hip, Knee, Knee, Ankle, Ankle]
-    max_diff = torch.tensor([90, 90, 140, 140, 93, 93], device=device)
+    max_diff = torch.tensor([35, 35, 85, 85, 45, 45], device=device)
     diff = torch.abs(pos_buff - start_pos)
     diff_scaled = 1 - torch.sqrt(torch.clamp(diff / max_diff.unsqueeze(0), 0, 1))
     pos_rew = torch.mean(diff_scaled, dim=1)

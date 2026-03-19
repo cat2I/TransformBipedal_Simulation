@@ -56,9 +56,9 @@ class TransformerWalkEnvCfg(DirectRLEnvCfg):
         "walk": [1, 1, 1, 0, 2, 1, 1],
     }
     
-    actuator_delay_max = 4
-    actuator_delay_min = 1
-    backlash = 1.6
+    actuator_delay_max = 6
+    actuator_delay_min = 2
+    backlash = 2.5
     
     sim: SimulationCfg = SimulationCfg(
         dt=0.005,
@@ -75,7 +75,7 @@ class TransformerWalkEnvCfg(DirectRLEnvCfg):
     robot: ArticulationCfg = TRANSFORMER_CFG.replace(prim_path="/World/envs/env_.*/Robot")
     
     contact: ContactSensorCfg = ContactSensorCfg(
-        prim_path="/World/envs/env_.*/Robot/SimpleTrans/Foot.*",
+        prim_path="/World/envs/env_.*/Robot/Robot/Foot.*",
         update_period=0.005,
         track_air_time=True,
         track_pose=True,
@@ -85,7 +85,7 @@ class TransformerWalkEnvCfg(DirectRLEnvCfg):
     )
     
     imu: ImuCfg = ImuCfg(
-        prim_path="/World/envs/env_.*/Robot/SimpleTrans/Baselink",
+        prim_path="/World/envs/env_.*/Robot/Robot/Baselink",
         offset=ImuCfg.OffsetCfg(
             pos=(0.0, 0.0, 0.0),
             rot=(0.0, 0.0, 0.0, 1.0),
@@ -112,17 +112,17 @@ class TransformerWalkEnv(DirectRLEnv):
         # ✅ CHANGED: servo min/max for 6 joints only!
         # [Hip_L, Hip_R, Knee_L, Knee_R, Ankle_L, Ankle_R]
         self.servo_max = torch.tensor(
-            [90, 90, 140, 140, 93, 93],  # ✅ No Bub!
+            [30, 30, -45, -45, 30, 30],  # ✅ No Bub!
             device=self.device, dtype=torch.int
         )
         self.servo_min = torch.tensor(
-            [-90, -90, 0, 0, -93, -93],
+            [20, 20, -55, -55, 20, 20],
             device=self.device, dtype=torch.int
         )
         
         # ✅ CHANGED: base_pose for 6 joints
         # [Hip_L, Hip_R, Knee_L, Knee_R, Ankle_L, Ankle_R]
-        start_pos = [-25, -25, 50, 50, -25, -25]  # ✅ No Bub!
+        start_pos = [25, 25, -50, -50, 25, 25]  # ✅ No Bub!
         self.base_pose = torch.tensor(
             [start_pos for _ in range(self.num_envs)], 
             device=self.device, dtype=torch.float32
@@ -139,7 +139,7 @@ class TransformerWalkEnv(DirectRLEnv):
         ), dim=0)
         
         # ✅ Randomization ranges (unchanged)
-        self.frictions = torch.tensor([0.1 + x/1000 for x in range(0, 201)], device=self.device)
+        self.frictions = torch.tensor([0.3 + x/1000 for x in range(0, 201)], device=self.device)
         self.torques = torch.tensor([9.27 + x/1000 for x in range(0, 1030)], device=self.device)
         self.dampings = torch.tensor([0.6 + x/1000 for x in range(0, 101)], device=self.device)
         
@@ -188,8 +188,8 @@ class TransformerWalkEnv(DirectRLEnv):
 
         from isaaclab.sim.spawners.from_files import GroundPlaneCfg, spawn_ground_plane
         ground_cfg = RigidBodyMaterialCfg(
-            static_friction=1.0,
-            dynamic_friction=0.5,
+            static_friction=0.8,
+            dynamic_friction=0.4,
             restitution=0.05,
             friction_combine_mode="average",
         )
@@ -464,7 +464,7 @@ def deviation_reward(og_pose, curr_pose, action: str = "walk"):
 def height_reward(robot_root_pos):
     """Height reward - ✅ FIXED ideal_height for 6 DOF!"""
     heights = robot_root_pos[:, 2]
-    ideal_height = 0.37   
+    ideal_height = 0.392   
     max_deviation = 0.3
     
     height_diff = torch.abs(heights - ideal_height)
@@ -479,7 +479,7 @@ def height_reward(robot_root_pos):
 def joint_position_reward(pos_buff, start_pos, device: str):
     """Joint position reward - ✅ CHANGED: 6 joints!"""
     # ✅ CHANGED: max_diff for 6 joints [Hip, Hip, Knee, Knee, Ankle, Ankle]
-    max_diff = torch.tensor([90, 90, 140, 140, 93, 93], device=device)
+    max_diff = torch.tensor([5, 5, 5, 5, 5, 5], device=device)
     diff = torch.abs(pos_buff - start_pos)
     diff_scaled = 1 - torch.sqrt(torch.clamp(diff / max_diff.unsqueeze(0), 0, 1))
     pos_rew = torch.mean(diff_scaled, dim=1)

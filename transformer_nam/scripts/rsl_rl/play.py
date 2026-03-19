@@ -184,12 +184,35 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
         with torch.inference_mode():
             # agent stepping
             actions = policy(obs)
+            
+            # ✅ LOGGING: Display observations and actions
+            if timestep % 200 == 0:
+                # Lấy góc thực tế đang được apply (cmd_actions của env)
+                env_internal = env.unwrapped  # vì RslRlVecEnvWrapper
+                real_angles = env_internal.cmd_actions[0].cpu().numpy()  # 6 góc hiện tại (degree)
+                
+                # Hoặc nếu muốn in noisy_act (có noise + backlash):
+                # real_angles = env_internal.noisy_act[0].cpu().numpy()
+                
+                roll  = obs["policy"][0][15].item()   # tùy version 44D, bạn có thể chỉnh index
+                pitch = obs["policy"][0][16].item()
+                gx    = obs["policy"][0][17].item()
+                gy    = obs["policy"][0][18].item()
+                gz    = obs["policy"][0][19].item()
+                
+                print(f"Step {timestep:5d} | "
+                    f"Orient: roll={roll:+7.4f}rad pitch={pitch:+7.4f}rad | "
+                    f"Gyro: gx={gx:+7.4f} gy={gy:+7.4f} gz={gz:+7.4f} | "
+                    f"Obs: {obs['policy'][0].shape[0]}D | "
+                    f"REAL Angles(°): {[f'{a:+6.1f}' for a in real_angles]}")
+            
             # env stepping
             obs, _, dones, _ = env.step(actions)
             # reset recurrent states for episodes that have terminated
             policy_nn.reset(dones)
-        if args_cli.video:
+            # Increment timestep
             timestep += 1
+        if args_cli.video:
             # Exit the play loop after recording one video
             if timestep == args_cli.video_length:
                 break

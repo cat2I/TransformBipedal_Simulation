@@ -20,19 +20,18 @@ from .transformer_config import TRANSFORMER_CFG
 
 @configclass
 class TransformerWalkEnvCfg(DirectRLEnvCfg):
-    """Config for Transformer walking (100% Bimo-style)"""
+    """Config for Transformer walking (6 DOF - no Bub)"""
     
-    # ✅ MATCH BIMO: Environment settings
-    episode_length_s = 10.0  # Was 20.0
+    episode_length_s = 10.0
     decimation = 10
-    num_actions = 8
-    num_observations = 52  # ✅ CHANGED: 15 → 52 (20 IMU + 32 action history)
+    num_actions = 8  
+    num_observations = 52 
     num_states = 0
     
     observation_space = gym.spaces.Box(
         low=-float('inf'),
         high=float('inf'),
-        shape=(52,),  # ✅ CHANGED
+        shape=(52,),  # ✅ CHANGED: 44 → 52
         dtype=float
     )
     
@@ -46,20 +45,19 @@ class TransformerWalkEnvCfg(DirectRLEnvCfg):
     action_space = gym.spaces.Box(
         low=-3.0,
         high=3.0,
-        shape=(8,),
+        shape=(8,),  # ✅ CHANGED: 6 → 8
         dtype=float
     )
     
-    obj = "walk"  # walk | turn | stop
+    obj = "walk"
     
     weights = {
-        "walk": [1, 1, 1, 0, 2, 1, 1],  # [orientation, height, joint pos, sigmoid, feet height, velocity, deviation]
+        "walk": [1, 1, 1, 0, 2, 1, 1],
     }
     
-    # ✅ MATCH BIMO: Actuator settings
     actuator_delay_max = 4
     actuator_delay_min = 1
-    backlash = 1.6  # degrees (was 0.03)
+    backlash = 1.6
     
     sim: SimulationCfg = SimulationCfg(
         dt=0.005,
@@ -76,7 +74,7 @@ class TransformerWalkEnvCfg(DirectRLEnvCfg):
     robot: ArticulationCfg = TRANSFORMER_CFG.replace(prim_path="/World/envs/env_.*/Robot")
     
     contact: ContactSensorCfg = ContactSensorCfg(
-        prim_path="/World/envs/env_.*/Robot/Namtransformer/Foot.*",  # ✅ CHANGED: Transformer → Namtransformer
+        prim_path="/World/envs/env_.*/Robot/Robot/Foot.*",
         update_period=0.005,
         track_air_time=True,
         track_pose=True,
@@ -85,225 +83,158 @@ class TransformerWalkEnvCfg(DirectRLEnvCfg):
         debug_vis=False,
     )
     
-    # ✅ MATCH BIMO: IMU config
     imu: ImuCfg = ImuCfg(
-        prim_path="/World/envs/env_.*/Robot/Namtransformer/Baselink",  # ✅ CHANGED: Transformer → Namtransformer
+        prim_path="/World/envs/env_.*/Robot/Robot/Baselink",
         offset=ImuCfg.OffsetCfg(
             pos=(0.0, 0.0, 0.0),
             rot=(0.0, 0.0, 0.0, 1.0),
         ),
         debug_vis=False,
-        update_period=0.012,  # 12ms
+        update_period=0.012,
     )
 
 
 class TransformerWalkEnv(DirectRLEnv):
-    """Bimo-style Direct RL environment for Transformer"""
+    """Direct RL environment for Transformer (6 DOF)"""
     
     cfg: TransformerWalkEnvCfg
     
     def __init__(self, cfg: TransformerWalkEnvCfg, render_mode: str | None = None, **kwargs):
         super().__init__(cfg, render_mode, **kwargs)
         
-        # ✅ MATCH BIMO: Reward weights
         self.weights = torch.tensor(
             self.cfg.weights[self.cfg.obj], 
             device=self.device
         ).repeat(self.num_envs, 1)
         self.obj = self.cfg.obj
         
-        # ✅ MATCH BIMO: Servo limits (symmetric!)
+        # ✅ CHANGED: servo min/max for 6 joints only!
+        # [Hip_L, Hip_R, Knee_L, Knee_R, Ankle_L, Ankle_R]
         self.servo_max = torch.tensor(
-            [1, 1, 90, 90, 140, 140, 93, 93],  # Symmetric hips/knees!
+            [10, 10, 35, 35, 85, 85, 45, 45],  # ✅ No Bub!
             device=self.device, dtype=torch.int
         )
         self.servo_min = torch.tensor(
-            [0, 0, -90, -90, 0, 0, -93, -93],
+            [-10, -10, -35, -35, -85, -85, -45, -45],
             device=self.device, dtype=torch.int
         )
         
-        # ✅ MATCH BIMO: Base pose
-        start_pos = [0, 0, 15, 15, -30, -30, 15, 15]  # Centered at 0° for hips
+        # ✅ CHANGED: base_pose for 6 joints
+        # [Hip_L, Hip_R, Knee_L, Knee_R, Ankle_L, Ankle_R]
+        start_pos = [0, 0, 25, 25, -50, -50, 25, 25]  # ✅ No Bub!
         self.base_pose = torch.tensor(
             [start_pos for _ in range(self.num_envs)], 
             device=self.device, dtype=torch.float32
         )
         
         self.cmd_actions = self.base_pose.clone()
-        self.last_direction = torch.zeros(self.num_envs, 8, device=self.device)
+        self.last_direction = torch.zeros(self.num_envs, 8, device=self.device)  # ✅ 8 joints
         self.gear_position = self.base_pose.clone()
         
-        # ✅ MATCH BIMO: Action direction (for turning - not used in "walk" mode)
         half = self.num_envs // 2
         self.act_direction = torch.cat((
             torch.ones(half, device=self.device),
             -torch.ones(self.num_envs - half, device=self.device)
         ), dim=0)
         
-        # ✅ MATCH BIMO: Randomization ranges
+        # ✅ Randomization ranges (unchanged)
         self.frictions = torch.tensor([0.1 + x/1000 for x in range(0, 201)], device=self.device)
         self.torques = torch.tensor([9.27 + x/1000 for x in range(0, 1030)], device=self.device)
         self.dampings = torch.tensor([0.6 + x/1000 for x in range(0, 101)], device=self.device)
         
-        # ✅ MATCH BIMO: Noise configs
         self.orient_noise = GaussianNoiseCfg(mean=0.0, std=0.015, operation="add")
         self.gyro_noise = GaussianNoiseCfg(mean=0.0, std=0.01, operation="add")
         self.actuator_noise = GaussianNoiseCfg(mean=0.0, std=0.5, operation="add")
         
-        # ✅ MATCH BIMO: Actuator delays
         self.act_timer = 0
         self.act_delay = 0
         
-        # ✅ MATCH BIMO: History buffers (4 timesteps!)
+        # ✅ CHANGED: History buffers for 6 joints
         self.orient_h = torch.zeros(self.num_envs, 4, 3, device=self.device)
         self.gyro_h = torch.zeros(self.num_envs, 4, 3, device=self.device)
-        self.act_hist = torch.zeros(self.num_envs, 4, 8, device=self.device)
+        self.act_hist = torch.zeros(self.num_envs, 4, 8, device=self.device)  # ✅ 8 joints
         
-        # Initialize action history to base pose
         self.act_hist[:, :] = torch.clamp(
             (self.base_pose[0] - self.servo_min) / (self.servo_max - self.servo_min) * 2 - 1, 
             -1, 1
         )
         
         print(f"\n{'='*70}")
-        print(f"🤖 TRANSFORMER ENV (BIMO-STYLE)")
+        print(f"🤖 TRANSFORMER ENV (8 DOF - WITH BUB)")
         print(f"  Observation dim: {self.cfg.num_observations} (20 IMU + 32 action history)")
         print(f"  Action dim: {self.cfg.num_actions}")
+        print(f"  Joints: Bub_L, Hip_L, Knee_L, Ankle_L, Bub_R, Hip_R, Knee_R, Ankle_R")
         print(f"  Objective: {self.obj}")
-        print(f"  Backlash: {self.cfg.backlash}°")
         print(f"{'='*70}\n")
     
     def _setup_scene(self):
-        """Setup scene (match Bimo structure)"""
-        # Robot
+        """Setup scene"""
         self.robot = Articulation(self.cfg.robot)
         self.scene.articulations["robot"] = self.robot
 
-        # IMU sensor
         self.imu = Imu(self.cfg.imu)
         self.scene.sensors["imu"] = self.imu
 
-        # Contact sensor
         self.contact = ContactSensor(self.cfg.contact)
         self.scene.sensors["contact"] = self.contact
 
-        # Clone environments
         self.scene.clone_environments(copy_from_source=False)
         self.scene.filter_collisions(global_prim_paths=[])
 
-        # ✅ ENABLE: Randomize foot pad material properties (TPU)
-        from pxr import Usd
-        import omni.usd
-    
-        # Wait for scene to be created
-        self.sim.render()
-        
-        # Get USD stage
-        stage = omni.usd.get_context().get_stage()
-        
         print(f"\n{'='*70}")
-        print("🔧 RANDOMIZING FOOT MATERIALS (TPU)")
-        
-        for i in range(self.num_envs):
-            for foot_name in ["Footleft", "Footright"]:  # ✅ MATCH YOUR URDF NAMES!
-                prim_path = f"/World/envs/env_{i}/Robot/Namtransformer/{foot_name}"
-                
-                # Check if prim exists
-                prim = stage.GetPrimAtPath(prim_path)
-                if not prim.IsValid():
-                    print(f"  ⚠️  Skipping {prim_path} (not found)")
-                    continue
-                
-                # ✅ MATCH BIMO: Randomize TPU properties
-                static = round(uniform(1.5, 2.0) * 10) / 10      # 1.5-2.0
-                dynamic = static - 0.2                            # 1.3-1.8
-                restitution = round(uniform(0.05, 0.15) * 100) / 100  # 0.05-0.15
-                
-                mat_cfg = RigidBodyMaterialCfg(
-                    static_friction=static,
-                    dynamic_friction=dynamic,
-                    restitution=restitution,
-                    compliant_contact_stiffness=5e4,   # ✅ CRITICAL for stability!
-                    compliant_contact_damping=8e2,     # ✅ CRITICAL for stability!
-                    friction_combine_mode="average",
-                )
-                
-                # Create material
-                mat_path = f"/World/ContactMaterials/env_{i}/{foot_name}_mat"
-                mat_cfg.func(mat_path, mat_cfg)
-                
-                # Bind to foot
-                bind_physics_material(prim_path, mat_path)
-                
-                if i == 0:  # Log first env only
-                    print(f"  ✅ {foot_name}: friction={static:.1f}, restitution={restitution:.2f}")
-        
+        print("✅ Scene created (6 DOF - no material randomization)")
         print(f"{'='*70}\n")
 
-        # Ground plane
         from isaaclab.sim.spawners.from_files import GroundPlaneCfg, spawn_ground_plane
         ground_cfg = RigidBodyMaterialCfg(
-            static_friction=1.0,
-            dynamic_friction=0.5,
+            static_friction=0.8,
+            dynamic_friction=0.4,
             restitution=0.05,
-            compliant_contact_stiffness=1e6,   # ✅ ADD: Ground stiffness (harder than feet!)
-            compliant_contact_damping=1e4,     # ✅ ADD: Ground damping
             friction_combine_mode="average",
         )
         spawn_ground_plane(prim_path="/World/ground", cfg=GroundPlaneCfg(physics_material=ground_cfg))
 
-        # Lighting
         light_cfg = sim_utils.DomeLightCfg(intensity=2000.0, color=(0.75, 0.75, 0.75))
         light_cfg.func("/World/Light", light_cfg)
     
     def _get_observations(self) -> dict:
-        """✅ MATCH BIMO: 52D observations (20 IMU + 32 action history)"""
-        # Get IMU data
+        """✅ CHANGED: 44D observations (20 IMU + 24 action history for 6 joints)"""
         self.imu_data = self.scene.sensors["imu"].data
         orient = quaternion_to_euler(self.imu_data.quat_w)
         angular_vel = self.imu_data.ang_vel_b
         
-        # Add noise
         orient = gaussian_noise(orient, self.orient_noise)
         angular_vel = gaussian_noise(angular_vel, self.gyro_noise)
         
-        # Scale to [-1, 1]
         orient = scale_value(orient, -1.0, 1.0)
         angular_vel = scale_value(angular_vel, -2.0, 2.0)
         
-        # Update IMU history
         self.update_imu_history(orient, angular_vel)
         
-        # Arrange IMU data: [4 timesteps × (2 orient + 3 gyro)] = 20D
         imu_data = torch.cat((self.orient_h[:, :, :2], self.gyro_h), dim=2)
         imu_data = imu_data.reshape(self.num_envs, 20)
         
-        # Get commanded actions and scale to [-1, 1]
         cmd_act = torch.clamp(
             (self.cmd_actions - self.servo_min) / (self.servo_max - self.servo_min) * 2 - 1,
             -1, 1
         )
         
-        # Update action history
         self.act_hist[:, :-1] = self.act_hist[:, 1:].clone()
         self.act_hist[:, -1] = cmd_act
         
-        # Arrange action data: [4 timesteps × 8 joints] = 32D
         proc_act = self.act_hist.reshape(self.num_envs, 32)
         
-        # Combine: 20 + 32 = 52D
+        # 20 + 32 = 52D
         obs_buffer = torch.cat((imu_data, proc_act), dim=1)
         obs_buffer = torch.round(obs_buffer, decimals=4)
         
         return {"policy": obs_buffer}
     
     def _pre_physics_step(self, actions: torch.Tensor):
-        """✅ MATCH BIMO: Action processing with backlash and delay"""
-        # Clamp actions and apply
+        """Action processing with backlash and delay"""
         actions_cpy = torch.clamp(actions.clone(), -3.0, 3.0)
-        self.cmd_actions += actions_cpy * 2 / 3  # ✅ MATCH BIMO action scale!
+        self.cmd_actions += actions_cpy * 2 / 3
         
-        # ✅ MATCH BIMO: Backlash simulation
         delta = self.cmd_actions - self.gear_position
         direction = torch.sign(delta)
         direction_changed = (direction != self.last_direction) & (self.last_direction != 0)
@@ -317,14 +248,12 @@ class TransformerWalkEnv(DirectRLEnv):
         self.gear_position += movement
         self.last_direction = torch.where(delta != 0, direction, self.last_direction)
         
-        # ✅ MATCH BIMO: Add actuator noise
         self.noisy_act = torch.clamp(
             gaussian_noise(self.gear_position, self.actuator_noise),
             self.servo_min,
             self.servo_max
         )
         
-        # ✅ MATCH BIMO: Random delay (1-4 steps = 5-20ms)
         self.act_timer = 0
         self.act_delay = torch.randint(
             low=self.cfg.actuator_delay_min,
@@ -333,31 +262,28 @@ class TransformerWalkEnv(DirectRLEnv):
         ).item()
     
     def _apply_action(self):
-        """✅ MATCH BIMO: Apply action with delay"""
+        """Apply action with delay"""
         if self.act_timer >= self.act_delay:
             self.robot.set_joint_position_target(torch.deg2rad(self.noisy_act))
         else:
             self.act_timer += 1
     
     def _get_rewards(self) -> torch.Tensor:
-        """✅ MATCH BIMO: Use Bimo reward functions"""
-        # Get data
+        """Reward calculation"""
         euler_imu_orient = quaternion_to_euler(self.imu_data.quat_w)
         robot_root_pos = self.robot.data.root_pos_w
         lin_vel = self.robot.data.root_com_vel_w
         contact_pos = self.scene.sensors["contact"].data.pos_w
         air_time = self.scene.sensors["contact"].data.current_air_time
         
-        # ✅ USE BIMO REWARD FUNCTIONS (copied below)
         orientation_rew = orientation_reward(euler_imu_orient, self.obj, self.device)
-        height_rew = height_reward(robot_root_pos)
+        height_rew = height_reward(robot_root_pos)  # ✅ Fixed ideal_height inside function
         position_rew = joint_position_reward(self.cmd_actions, self.base_pose, self.device)
         sig_extra = sigmoid_extra(self.cmd_actions, self.base_pose)
         vel_rew = velocity_reward(lin_vel, self.act_direction, self.obj)
         feet_h_rew = feet_height_reward(air_time, contact_pos, 0.03, 150)
         dev_rew = deviation_reward(self.scene.env_origins, robot_root_pos, self.obj)
         
-        # Compute weighted reward
         w = self.weights / torch.sum(self.weights, dim=1, keepdim=True)
         
         total_reward = (
@@ -370,7 +296,6 @@ class TransformerWalkEnv(DirectRLEnv):
             dev_rew * w[:, 6]
         )
         
-        # Debug logging
         if self.episode_length_buf[0] % 100 == 0 and self.episode_length_buf[0] > 0:
             idx = 0
             print(f"\n{'='*70}")
@@ -385,18 +310,15 @@ class TransformerWalkEnv(DirectRLEnv):
         return total_reward
     
     def _get_dones(self) -> tuple[torch.Tensor, torch.Tensor]:
-        """✅ MATCH BIMO: Termination conditions"""
+        """Termination conditions"""
         terminated = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
         truncated = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
         
-        # Time-out
         truncated = self.episode_length_buf >= self.max_episode_length - 1
         
-        # Height termination
         head_heights = self.robot.data.root_pos_w[:, 2]
         height_termination = head_heights < 0.1
         
-        # Orientation termination
         root_orientations = self.robot.data.root_quat_w
         euler_angles = quaternion_to_euler(root_orientations)
         x_rotation = torch.abs(euler_angles[:, 0])
@@ -408,23 +330,21 @@ class TransformerWalkEnv(DirectRLEnv):
         return terminated, truncated
     
     def _reset_idx(self, env_ids: torch.Tensor | None):
-        """✅ MATCH BIMO: Reset with randomization"""
+        """Reset with randomization"""
         if env_ids is None:
             env_ids = self.robot._ALL_INDICES
         
         super()._reset_idx(env_ids)
         
-        # Default states
         root_state = self.robot.data.default_root_state[env_ids]
         root_state[:, :3] += self.scene.env_origins[env_ids]
         
         joint_pos = self.robot.data.default_joint_pos[env_ids].clone()
         joint_vel = self.robot.data.default_joint_vel[env_ids].clone()
         
-        # ✅ MATCH BIMO: Randomize joint parameters
         reset_ids = env_ids.flatten().long()
         n_reset = reset_ids.shape[0]
-        n_joints = 8
+        n_joints = 8  
         
         fric_idx = torch.randint(0, self.frictions.size(0), (n_reset, n_joints), device=self.device)
         torque_idx = torch.randint(0, self.torques.size(0), (n_reset, n_joints), device=self.device)
@@ -434,7 +354,6 @@ class TransformerWalkEnv(DirectRLEnv):
         torque_samples = self.torques[torque_idx]
         damp_samples = self.dampings[damp_idx]
         
-        # Write to sim
         self.robot.write_joint_friction_coefficient_to_sim(fric_samples, joint_ids=None, env_ids=env_ids)
         self.robot.write_joint_effort_limit_to_sim(torque_samples, joint_ids=None, env_ids=env_ids)
         self.robot.write_joint_damping_to_sim(damp_samples, joint_ids=None, env_ids=env_ids)
@@ -443,7 +362,6 @@ class TransformerWalkEnv(DirectRLEnv):
         self.robot.write_root_com_velocity_to_sim(root_state[:, 7:], env_ids)
         self.robot.write_joint_state_to_sim(joint_pos, joint_vel, None, env_ids)
         
-        # Reset buffers
         self.orient_h[env_ids] = 0.0
         self.gyro_h[env_ids] = 0.0
         self.act_hist[env_ids, :] = self.base_pose[0]
@@ -459,7 +377,7 @@ class TransformerWalkEnv(DirectRLEnv):
 
 
 # ============================================================
-# ✅ BIMO REWARD FUNCTIONS (COPIED EXACTLY)
+# ✅ REWARD FUNCTIONS
 # ============================================================
 
 @torch.jit.script
@@ -472,12 +390,10 @@ def quaternion_to_euler(quat: torch.Tensor):
     
     w, x, y, z = quat[..., 0], quat[..., 1], quat[..., 2], quat[..., 3]
     
-    # Roll
     sinr_cosp = 2 * (w * x + y * z)
     cosr_cosp = 1 - 2 * (x * x + y * y)
     roll = torch.atan2(sinr_cosp, cosr_cosp)
     
-    # Pitch
     sinp = 2 * (w * y - z * x)
     pitch = torch.where(
         torch.abs(sinp) >= 1,
@@ -485,7 +401,6 @@ def quaternion_to_euler(quat: torch.Tensor):
         torch.asin(sinp)
     )
     
-    # Yaw
     siny_cosp = 2 * (w * z + x * y)
     cosy_cosp = 1 - 2 * (y * y + z * z)
     yaw = torch.atan2(siny_cosp, cosy_cosp)
@@ -545,9 +460,9 @@ def deviation_reward(og_pose, curr_pose, action: str = "walk"):
 
 @torch.jit.script
 def height_reward(robot_root_pos):
-    """Height reward"""
+    """Height reward - ✅ FIXED ideal_height for 6 DOF!"""
     heights = robot_root_pos[:, 2]
-    ideal_height = 0.392  
+    ideal_height = 0.392   
     max_deviation = 0.3
     
     height_diff = torch.abs(heights - ideal_height)
@@ -560,8 +475,9 @@ def height_reward(robot_root_pos):
 
 @torch.jit.script
 def joint_position_reward(pos_buff, start_pos, device: str):
-    """Joint position reward"""
-    max_diff = torch.tensor([1, 1, 90, 90, 140, 140, 93, 93], device=device)
+    """Joint position reward - ✅ CHANGED: 6 joints!"""
+    # ✅ CHANGED: max_diff for 6 joints [Hip, Hip, Knee, Knee, Ankle, Ankle]
+    max_diff = torch.tensor([10, 10, 35, 35, 85, 85, 45, 45], device=device)
     diff = torch.abs(pos_buff - start_pos)
     diff_scaled = 1 - torch.sqrt(torch.clamp(diff / max_diff.unsqueeze(0), 0, 1))
     pos_rew = torch.mean(diff_scaled, dim=1)
