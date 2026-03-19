@@ -205,29 +205,9 @@ transformer_nam/
 | USD files missing on GitHub | Remove `**/*.usd` from `.gitignore` |
 | Feet slip on ground | Decrease `dynamic_friction` to 0.3-0.4 |
 
-## Development
-
-### IDE Setup (VSCode)
-1. Press `Ctrl+Shift+P` → `Tasks: Run Task` → `setup_python_env`
-2. Enter path to Isaac Sim installation
-3. Creates `.python.env` for indexing
-
-### Code Formatting
-```bash
-pip install pre-commit
-pre-commit run --all-files
-```
-
 ## References
 
 - [Isaac Lab Documentation](https://docs.omniverse.nvidia.com/isaaclab/)
 - [RSL-RL Repository](https://github.com/leggedrobotics/rsl_rl)
 - [IsaacSim](https://docs.omniverse.nvidia.com/isaacsim/)
 
-## License
-
-[Specify your license here]
-
-## Authors
-
-- Transformer Bipedal Project Team
