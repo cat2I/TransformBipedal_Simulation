@@ -3,24 +3,28 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-from isaaclab.utils import configclass
-
-from isaaclab_rl.rsl_rl import RslRlOnPolicyRunnerCfg, RslRlPpoActorCriticCfg, RslRlPpoAlgorithmCfg
+from isaaclab.utils.configclass import configclass
+from isaaclab_rl.rsl_rl import RslRlMLPModelCfg, RslRlOnPolicyRunnerCfg, RslRlPpoAlgorithmCfg
 
 
 @configclass
 class PPORunnerCfg(RslRlOnPolicyRunnerCfg):
+    """rsl-rl >= 4.0 tách ``policy`` thành hai model ``actor`` / ``critic``."""
+
     num_steps_per_env = 16
     max_iterations = 150
     save_interval = 50
     experiment_name = "cartpole_direct"
-    policy = RslRlPpoActorCriticCfg(
-        init_noise_std=1.0,
-        actor_obs_normalization=False,
-        critic_obs_normalization=False,
-        actor_hidden_dims=[32, 32],
-        critic_hidden_dims=[32, 32],
+    actor = RslRlMLPModelCfg(
+        hidden_dims=[32, 32],
         activation="elu",
+        obs_normalization=False,
+        distribution_cfg=RslRlMLPModelCfg.GaussianDistributionCfg(init_std=1.0),
+    )
+    critic = RslRlMLPModelCfg(
+        hidden_dims=[32, 32],
+        activation="elu",
+        obs_normalization=False,
     )
     algorithm = RslRlPpoAlgorithmCfg(
         value_loss_coef=1.0,

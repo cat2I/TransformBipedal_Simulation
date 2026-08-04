@@ -1,21 +1,11 @@
-#!/bin/bash
-set -e
-
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-# Isaac Sim python
-ISAAC_PYTHON="${HOME}/IsaacLab/isaac-sim/python.sh"
-
-if [ ! -f "$ISAAC_PYTHON" ]; then
-    echo "❌ Isaac Sim python not found at: $ISAAC_PYTHON"
-    exit 1
-fi
-
-# Add extension and IsaacLab to PYTHONPATH
-export PYTHONPATH="${PYTHONPATH}:${SCRIPT_DIR}/source"
-export PYTHONPATH="${PYTHONPATH}:${HOME}/IsaacLab/source"
-
-echo "✅ Using Isaac Sim Python: $ISAAC_PYTHON"
-
-# Run
-"$ISAAC_PYTHON" "$@"
+#!/usr/bin/env bash
+# =============================================================================
+#  run_direct.sh — giữ lại cho tương thích, chuyển tiếp sang run.sh
+# =============================================================================
+#  Bản cũ gọi ${HOME}/IsaacLab/isaac-sim/python.sh — đường dẫn đó chỉ có ở bản
+#  Isaac Sim đóng gói sẵn. Máy này cài bằng pip trong conda env 'isaacsim' nên
+#  không tồn tại python.sh; mọi thứ giờ đi qua run.sh.
+# =============================================================================
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec "${SCRIPT_DIR}/run.sh" "$@"

@@ -48,7 +48,7 @@ def test_initial_environment():
     print(f"   X: {base_pos[0]:.4f} m")
     print(f"   Y: {base_pos[1]:.4f} m")
     print(f"   Z: {base_pos[2]:.4f} m  (target: {env.cfg.base_height:.4f} m)")
-    print(f"\n   Quaternion (w,x,y,z): [{base_quat[0]:.3f}, {base_quat[1]:.3f}, {base_quat[2]:.3f}, {base_quat[3]:.3f}]")
+    print(f"\n   Quaternion (x,y,z,w): [{base_quat[0]:.3f}, {base_quat[1]:.3f}, {base_quat[2]:.3f}, {base_quat[3]:.3f}]")
     
     # 2. Joint positions
     joint_pos_deg = torch.rad2deg(robot.data.joint_pos[0]).cpu().numpy()
@@ -130,11 +130,13 @@ def test_initial_environment():
             max_height = torch.max(max_height, height)
             
             # Calculate tilt
+            # IsaacLab 3.0 tra quaternion theo (x, y, z, w), khong con (w, x, y, z)
             quat = robot.data.root_quat_w
-            sinr_cosp = 2 * (quat[:, 0] * quat[:, 1] + quat[:, 2] * quat[:, 3])
-            cosr_cosp = 1 - 2 * (quat[:, 1]**2 + quat[:, 2]**2)
+            x, y, z, w = quat[:, 0], quat[:, 1], quat[:, 2], quat[:, 3]
+            sinr_cosp = 2 * (w * x + y * z)
+            cosr_cosp = 1 - 2 * (x**2 + y**2)
             roll = torch.atan2(sinr_cosp, cosr_cosp)
-            sinp = 2 * (quat[:, 0] * quat[:, 2] - quat[:, 3] * quat[:, 1])
+            sinp = 2 * (w * y - z * x)
             pitch = torch.asin(torch.clamp(sinp, -1, 1))
             tilt = torch.abs(roll) + torch.abs(pitch)
             max_tilt = torch.max(max_tilt, tilt)

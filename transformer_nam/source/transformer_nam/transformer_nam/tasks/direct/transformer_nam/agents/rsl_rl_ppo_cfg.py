@@ -3,27 +3,42 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-from isaaclab.utils import configclass
-from isaaclab_rl.rsl_rl import RslRlOnPolicyRunnerCfg, RslRlPpoActorCriticCfg, RslRlPpoAlgorithmCfg
+from isaaclab.utils.configclass import configclass
+from isaaclab_rl.rsl_rl import RslRlMLPModelCfg, RslRlOnPolicyRunnerCfg, RslRlPpoAlgorithmCfg
 
 
 @configclass
 class TransformerWalkPPORunnerCfg(RslRlOnPolicyRunnerCfg):
-    """PPO runner configuration for Transformer walking"""
+    """PPO runner configuration for Transformer walking
+
+    rsl-rl >= 4.0 bỏ ``policy = RslRlPpoActorCriticCfg(...)``, tách thành hai
+    model riêng ``actor`` và ``critic``. Cờ ``empirical_normalization`` cũng
+    chuyển thành ``obs_normalization`` trên từng model.
+
+    Kiến trúc mạng và toàn bộ hyperparameter giữ NGUYÊN như cấu hình cũ
+    ([256, 256, 128], elu, init_std=1.0, không chuẩn hoá observation) để các
+    checkpoint đã train trước đây vẫn khớp shape.
+    """
 
     # PPO Runner Config
     num_steps_per_env = 24
     max_iterations = 5000
     save_interval = 50
     experiment_name = "transformer_walk"
-    empirical_normalization = False
 
-    # Policy network
-    policy = RslRlPpoActorCriticCfg(
-        init_noise_std=1.0,
-        actor_hidden_dims=[256, 256, 128],
-        critic_hidden_dims=[256, 256, 128],
+    # Policy network — trước đây là policy.actor_hidden_dims
+    actor = RslRlMLPModelCfg(
+        hidden_dims=[256, 256, 128],
         activation="elu",
+        obs_normalization=False,
+        distribution_cfg=RslRlMLPModelCfg.GaussianDistributionCfg(init_std=1.0),
+    )
+
+    # Value network — trước đây là policy.critic_hidden_dims
+    critic = RslRlMLPModelCfg(
+        hidden_dims=[256, 256, 128],
+        activation="elu",
+        obs_normalization=False,
     )
 
     # PPO algorithm

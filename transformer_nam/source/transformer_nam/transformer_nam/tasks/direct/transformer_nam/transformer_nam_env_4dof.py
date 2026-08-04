@@ -8,7 +8,7 @@ from isaaclab.envs import DirectRLEnv, DirectRLEnvCfg
 from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.sensors import ContactSensor, ContactSensorCfg, ImuCfg, Imu
 from isaaclab.sim import SimulationCfg
-from isaaclab.utils import configclass
+from isaaclab.utils.configclass import configclass
 from isaaclab.utils.math import sample_uniform
 from isaaclab.utils.noise import GaussianNoiseCfg, gaussian_noise
 from isaaclab.sim.spawners import RigidBodyMaterialCfg
@@ -16,6 +16,8 @@ from isaaclab.sim.utils import bind_physics_material
 from random import uniform
 
 from .transformer_config import TRANSFORMER_CFG
+
+from ._lab3_compat import as_torch, imu_quat_w
 
 
 @configclass
@@ -200,7 +202,7 @@ class TransformerWalkEnv(DirectRLEnv):
     def _get_observations(self) -> dict:
         """✅ CHANGED: 44D observations (20 IMU + 24 action history for 6 joints)"""
         self.imu_data = self.scene.sensors["imu"].data
-        orient = quaternion_to_euler(self.imu_data.quat_w)
+        orient = quaternion_to_euler(imu_quat_w(self.robot, self.cfg.imu))
         angular_vel = self.imu_data.ang_vel_b
         
         orient = gaussian_noise(orient, self.orient_noise)
@@ -270,11 +272,11 @@ class TransformerWalkEnv(DirectRLEnv):
     
     def _get_rewards(self) -> torch.Tensor:
         """Reward calculation"""
-        euler_imu_orient = quaternion_to_euler(self.imu_data.quat_w)
-        robot_root_pos = self.robot.data.root_pos_w
-        lin_vel = self.robot.data.root_com_vel_w
-        contact_pos = self.scene.sensors["contact"].data.pos_w
-        air_time = self.scene.sensors["contact"].data.current_air_time
+        euler_imu_orient = quaternion_to_euler(imu_quat_w(self.robot, self.cfg.imu))
+        robot_root_pos = as_torch(self.robot.data.root_pos_w)
+        lin_vel = as_torch(self.robot.data.root_com_vel_w)
+        contact_pos = as_torch(self.scene.sensors["contact"].data.pos_w)
+        air_time = as_torch(self.scene.sensors["contact"].data.current_air_time)
         
         orientation_rew = orientation_reward(euler_imu_orient, self.obj, self.device)
         height_rew = height_reward(robot_root_pos)  # ✅ Fixed ideal_height inside function
@@ -316,10 +318,10 @@ class TransformerWalkEnv(DirectRLEnv):
         
         truncated = self.episode_length_buf >= self.max_episode_length - 1
         
-        head_heights = self.robot.data.root_pos_w[:, 2]
+        head_heights = as_torch(self.robot.data.root_pos_w)[:, 2]
         height_termination = head_heights < 0.1
         
-        root_orientations = self.robot.data.root_quat_w
+        root_orientations = as_torch(self.robot.data.root_quat_w)
         euler_angles = quaternion_to_euler(root_orientations)
         x_rotation = torch.abs(euler_angles[:, 0])
         y_rotation = torch.abs(euler_angles[:, 1])
@@ -336,11 +338,11 @@ class TransformerWalkEnv(DirectRLEnv):
         
         super()._reset_idx(env_ids)
         
-        root_state = self.robot.data.default_root_state[env_ids]
+        root_state = as_torch(self.robot.data.default_root_state)[env_ids]
         root_state[:, :3] += self.scene.env_origins[env_ids]
         
-        joint_pos = self.robot.data.default_joint_pos[env_ids].clone()
-        joint_vel = self.robot.data.default_joint_vel[env_ids].clone()
+        joint_pos = as_torch(self.robot.data.default_joint_pos)[env_ids].clone()
+        joint_vel = as_torch(self.robot.data.default_joint_vel)[env_ids].clone()
         
         reset_ids = env_ids.flatten().long()
         n_reset = reset_ids.shape[0]
@@ -388,7 +390,9 @@ def quaternion_to_euler(quat: torch.Tensor):
     
     quat = quat / torch.norm(quat, dim=-1, keepdim=True)
     
-    w, x, y, z = quat[..., 0], quat[..., 1], quat[..., 2], quat[..., 3]
+    # IsaacLab 3.0 tra quaternion theo (x, y, z, w), khong con (w, x, y, z)
+    
+    x, y, z, w = quat[..., 0], quat[..., 1], quat[..., 2], quat[..., 3]
     
     sinr_cosp = 2 * (w * x + y * z)
     cosr_cosp = 1 - 2 * (x * x + y * y)
