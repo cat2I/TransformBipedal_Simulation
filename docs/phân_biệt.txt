@@ -1,0 +1,4 @@
+3DOFTrans là giới hạn khớp hông, ko bánh xe
+FullForm là mở khóa toàn bộ (có giới hạn quay hông), có bánh xe
+Newsimple là giới hạn hông, có bánh xe
+Fulltrans mở khóa toàn bộ hông, có bánh xe, 

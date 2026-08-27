@@ -99,3 +99,13 @@ gym.register(
 #             "TransformerWalkPPORunnerCfg",
 #     },
 # )
+# ── StandUp task: from split (BUB=90) to standing ──
+gym.register(
+    id="Transformer-StandUp-Direct-v0",
+    entry_point=f"{__name__}.transformer_standup_env:TransformerStandUpEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.transformer_standup_env:TransformerStandUpEnvCfg",
+        "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:TransformerWalkPPORunnerCfg",
+    },
+)

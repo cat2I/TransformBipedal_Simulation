@@ -1,0 +1,733 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot
+  name="axisnewbipedal">
+  <link
+    name="Baselink">
+    <inertial>
+      <origin
+        xyz="0.0121195610615885 -0.00045414700170382 0.032112087923575"
+        rpy="0 0 0" />
+      <mass
+        value="1.79873529531539" />
+      <inertia
+        ixx="0.0030430512563841"
+        ixy="-7.99243553046834E-07"
+        ixz="-4.79495467156078E-06"
+        iyy="0.00405280791590414"
+        iyz="-1.14391361988419E-05"
+        izz="0.00598666141833636" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://axisnewbipedal/meshes/Baselink.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://axisnewbipedal/meshes/Baselink.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link
+    name="IMUleft">
+    <inertial>
+      <origin
+        xyz="-0.00129188191927912 4.07733683330247E-06 -0.00236819206124636"
+        rpy="0 0 0" />
+      <mass
+        value="0.00446702174268276" />
+      <inertia
+        ixx="6.84231434995655E-07"
+        ixy="4.56208858048438E-10"
+        ixz="1.64296770524199E-08"
+        iyy="3.7604239998383E-07"
+        iyz="8.90632927329668E-11"
+        izz="9.07500911120845E-07" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://axisnewbipedal/meshes/IMUleft.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://axisnewbipedal/meshes/IMUleft.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="IMUleft_joint"
+    type="fixed">
+    <origin
+      xyz="-2.35848873947619E-05 -0.015000020755498 0.0851"
+      rpy="0 0 1.5707963267949" />
+    <parent
+      link="Baselink" />
+    <child
+      link="IMUleft" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="IMUright">
+    <inertial>
+      <origin
+        xyz="0.000870135893543372 -6.27414425968809E-09 -0.0067251282073453"
+        rpy="0 0 0" />
+      <mass
+        value="0.00662926531667998" />
+      <inertia
+        ixx="1.90880432962874E-06"
+        ixy="4.68983873418751E-13"
+        ixz="-4.15673471632752E-08"
+        iyy="9.54365098136334E-07"
+        iyz="4.16933580411647E-13"
+        izz="1.99900689159998E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://axisnewbipedal/meshes/IMUright.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://axisnewbipedal/meshes/IMUright.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="IMUright_joint"
+    type="fixed">
+    <origin
+      xyz="0 0.0149999999999998 0.0851"
+      rpy="0 0 1.5707963267949" />
+    <parent
+      link="Baselink" />
+    <child
+      link="IMUright" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="Bubleft">
+    <inertial>
+      <origin
+        xyz="0.000710752599830389 1.81785287933778E-08 0.0169536763899823"
+        rpy="0 0 0" />
+      <mass
+        value="0.0588145797321857" />
+      <inertia
+        ixx="2.46815692806483E-05"
+        ixy="1.50045890633806E-11"
+        ixz="-1.48525751292975E-06"
+        iyy="5.59461103392955E-05"
+        iyz="-1.75224139464006E-11"
+        izz="4.85525566915953E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://axisnewbipedal/meshes/Bubleft.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://axisnewbipedal/meshes/Bubleft.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Bubleft_joint"
+    type="revolute">
+    <origin
+      xyz="0.04025 -0.0799500000000004 0.0228999999999999"
+      rpy="1.5707963267949 0 -1.5707963267949" />
+    <parent
+      link="Baselink" />
+    <child
+      link="Bubleft" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="Hipleft">
+    <inertial>
+      <origin
+        xyz="-0.00042050534546903 0.00251976943574571 -0.0421972616591183"
+        rpy="0 0 0" />
+      <mass
+        value="0.226261634433227" />
+      <inertia
+        ixx="0.000137472901154741"
+        ixy="4.88881585039156E-07"
+        ixz="3.11903803638425E-06"
+        iyy="8.86233207220475E-05"
+        iyz="-7.23481904337154E-06"
+        izz="9.77025986114852E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://axisnewbipedal/meshes/Hipleft.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://axisnewbipedal/meshes/Hipleft.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Hipleft_joint"
+    type="revolute">
+    <origin
+      xyz="-0.000300000000000342 0 0.04695"
+      rpy="1.5707963267949 1.5707963267949 0" />
+    <parent
+      link="Bubleft" />
+    <child
+      link="Hipleft" />
+    <axis
+      xyz="0 -1 0" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="Rotate_left">
+    <inertial>
+      <origin
+        xyz="-0.00397214684050922 -1.07075881772278E-08 -0.0346181318611727"
+        rpy="0 0 0" />
+      <mass
+        value="0.0860125684597943" />
+      <inertia
+        ixx="8.11471763830618E-05"
+        ixy="1.42661208664027E-11"
+        ixz="2.909549419978E-06"
+        iyy="0.000122098911317256"
+        iyz="-7.29973827335826E-12"
+        izz="7.28979465570447E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://axisnewbipedal/meshes/Rotate_left.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://axisnewbipedal/meshes/Rotate_left.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Nhat_rotate_left"
+    type="revolute">
+    <origin
+      xyz="0.000100000000000128 -0.000299999999999932 -0.0961"
+      rpy="0 0 -1.5707963267949" />
+    <parent
+      link="Hipleft" />
+    <child
+      link="Rotate_left" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="Kneeleft">
+    <inertial>
+      <origin
+        xyz="-9.08269444225007E-05 -0.0847882248405136 -1.99919391926859E-05"
+        rpy="0 0 0" />
+      <mass
+        value="0.337644934503235" />
+      <inertia
+        ixx="0.000508986805699051"
+        ixy="6.50836667253898E-13"
+        ixz="2.62168989491212E-12"
+        iyy="0.000183877774809467"
+        iyz="1.12174723661214E-06"
+        izz="0.000412650811451325" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://axisnewbipedal/meshes/Kneeleft.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://axisnewbipedal/meshes/Kneeleft.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Kneeleft_joint"
+    type="revolute">
+    <origin
+      xyz="-0.00479999999999999 0 -0.089"
+      rpy="1.5707963267949 0 1.5707963267949" />
+    <parent
+      link="Rotate_left" />
+    <child
+      link="Kneeleft" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="Footleft">
+    <inertial>
+      <origin
+        xyz="0.020473 -0.020682 -0.00042834"
+        rpy="0 0 0" />
+      <mass
+        value="0.30253" />
+      <inertia
+        ixx="0.00028097"
+        ixy="-8.5366E-05"
+        ixz="4.3577E-07"
+        iyy="0.00053075"
+        iyz="1.0395E-08"
+        izz="0.00040177" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://axisnewbipedal/meshes/Footleft.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://axisnewbipedal/meshes/Footleft.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Footleft_joint"
+    type="revolute">
+    <origin
+      xyz="-0.000299999999999939 -0.19 0.00125000000000003"
+      rpy="0 0 0" />
+    <parent
+      link="Kneeleft" />
+    <child
+      link="Footleft" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="Bubright">
+    <inertial>
+      <origin
+        xyz="0.000710752599830416 -1.81785287378666E-08 -0.0169536763899823"
+        rpy="0 0 0" />
+      <mass
+        value="0.0588145797321857" />
+      <inertia
+        ixx="2.46815692806484E-05"
+        ixy="-1.50045890438722E-11"
+        ixz="1.4852575129298E-06"
+        iyy="5.59461103392956E-05"
+        iyz="-1.75224139484085E-11"
+        izz="4.85525566915954E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://axisnewbipedal/meshes/Bubright.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://axisnewbipedal/meshes/Bubright.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Bubright_joint"
+    type="revolute">
+    <origin
+      xyz="0.04025 0.07995 0.0229"
+      rpy="1.5707963267949 0 1.5707963267949" />
+    <parent
+      link="Baselink" />
+    <child
+      link="Bubright" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="Hipright">
+    <inertial>
+      <origin
+        xyz="-0.00042378293263215 -0.00253740497219043 -0.0419718857147577"
+        rpy="0 0 0" />
+      <mass
+        value="0.224852717179307" />
+      <inertia
+        ixx="0.000137437078521493"
+        ixy="-4.88795888755109E-07"
+        ixz="3.11909131459657E-06"
+        iyy="8.858768302376E-05"
+        iyz="7.23455158312816E-06"
+        izz="9.76339620287306E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://axisnewbipedal/meshes/Hipright.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://axisnewbipedal/meshes/Hipright.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Hipright_joint"
+    type="revolute">
+    <origin
+      xyz="-0.00029999999999869 0 -0.04695"
+      rpy="1.5707963267949 -1.5707963267949 0" />
+    <parent
+      link="Bubright" />
+    <child
+      link="Hipright" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="Rotate_right">
+    <inertial>
+      <origin
+        xyz="0.00397214753942057 1.01134073893228E-08 -0.0346181311327085"
+        rpy="0 0 0" />
+      <mass
+        value="0.0860125654516269" />
+      <inertia
+        ixx="8.11471741937285E-05"
+        ixy="1.3190967686973E-11"
+        ixz="-2.90954813510552E-06"
+        iyy="0.000122098908774383"
+        iyz="6.21911415279255E-12"
+        izz="7.2897944395315E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://axisnewbipedal/meshes/Rotate_right.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://axisnewbipedal/meshes/Rotate_right.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="rotate_right"
+    type="revolute">
+    <origin
+      xyz="9.99999999999612E-05 0.000299999999999689 -0.0961"
+      rpy="0 0 -1.5707963267949" />
+    <parent
+      link="Hipright" />
+    <child
+      link="Rotate_right" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="Kneeright">
+    <inertial>
+      <origin
+        xyz="8.99507553574486E-05 -0.0843475112569392 9.14142904644838E-05"
+        rpy="0 0 0" />
+      <mass
+        value="0.336236499067109" />
+      <inertia
+        ixx="0.000508951159286984"
+        ixy="-6.48914915361512E-13"
+        ixz="2.62168992654048E-12"
+        iyy="0.000183842128436334"
+        iyz="-1.12174723661202E-06"
+        izz="0.000412582346317215" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://axisnewbipedal/meshes/Kneeright.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://axisnewbipedal/meshes/Kneeright.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Kneeright"
+    type="revolute">
+    <origin
+      xyz="0.0050999999999999 0 -0.089"
+      rpy="1.5707963267949 0 1.5707963267949" />
+    <parent
+      link="Rotate_right" />
+    <child
+      link="Kneeright" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="Footright">
+    <inertial>
+      <origin
+        xyz="0.0205877685678537 -0.0213895212689252 1.84951291865854E-05"
+        rpy="0 0 0" />
+      <mass
+        value="0.302532642565086" />
+      <inertia
+        ixx="0.000280968016977903"
+        ixy="-8.53656460661092E-05"
+        ixz="4.35772758585093E-07"
+        iyy="0.000530752960448646"
+        iyz="1.0394500003033E-08"
+        izz="0.000401765448104903" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://axisnewbipedal/meshes/Footright.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://axisnewbipedal/meshes/Footright.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="Footright_joint"
+    type="revolute">
+    <origin
+      xyz="0.000300000000000022 -0.19 -0.00105000000000002"
+      rpy="0 0 0" />
+    <parent
+      link="Kneeright" />
+    <child
+      link="Footright" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+</robot>
