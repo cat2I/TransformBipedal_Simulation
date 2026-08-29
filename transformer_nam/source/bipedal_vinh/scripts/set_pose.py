@@ -74,7 +74,7 @@ from isaaclab.sim import SimulationContext
 
 # Tái dùng đúng cfg robot đã hiệu chỉnh sẵn (khớp, động cơ, quán tính...).
 # Import được là nhờ run.sh đã thêm source/ vào PYTHONPATH.
-from transformer_nam.tasks.direct.transformer_nam.transformer_config_10dof import (
+from bipedal_vinh.tasks.vinh10dof_config import (
     TRANSFORMER_10DOF_CFG,
 )
 
