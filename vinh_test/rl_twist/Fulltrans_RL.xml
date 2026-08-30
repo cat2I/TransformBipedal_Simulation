@@ -1,0 +1,129 @@
+<mujoco model="Fulltrans">
+  <compiler angle="radian" meshdir="/home/lenovo-loq/Desktop/TransformBipedal_Simulation/FullForm/meshes/"/>
+
+  <asset>
+    <mesh name="Baselink" file="Baselink.STL"/>
+    <mesh name="IMUleft" file="IMUleft.STL"/>
+    <mesh name="IMUright" file="IMUright.STL"/>
+    <mesh name="Bubleft" file="Bubleft.STL"/>
+    <mesh name="Hipleft_fixed" file="Hipleft_fixed.STL"/>
+    <mesh name="Twistleft" file="Twistleft.STL"/>
+    <mesh name="Kneeleft" file="Kneeleft.STL"/>
+    <mesh name="Footleft" file="Footleft.STL"/>
+    <mesh name="Bubright" file="Bubright.STL"/>
+    <mesh name="Hipright_fixed" file="Hipright_fixed.STL"/>
+    <mesh name="Twistright" file="Twistright.STL"/>
+    <mesh name="Kneeright" file="Kneeright.STL"/>
+    <mesh name="Footright" file="Footright.STL"/>
+  </asset>
+
+  <worldbody>
+    <geom name="floor" size="5 5 0.1" type="plane" rgba="0.35 0.38 0.42 1"/>
+    <light pos="0 0 3" dir="0 0 -1" type="directional"/>
+    <body name="Baselink">
+      <inertial pos="0.0177911 -0.000635638 0.0390763" quat="-0.00258177 0.70659 -0.00201003 0.707615" mass="1.22784" diaginertia="0.00558072 0.00367027 0.00229888"/>
+      <joint type="free"/>
+      <geom type="mesh" rgba="0.792157 0.819608 0.933333 1" mesh="Baselink"/>
+      <body name="IMUleft" pos="-2.3585e-05 -0.015 0.0851" quat="-2.59734e-06 0.707105 -0.707108 2.59735e-06">
+        <inertial pos="0.00129188 4.07734e-06 0.00236819" quat="0.518251 0.517605 -0.481816 0.480994" mass="0.00446702" diaginertia="9.08703e-07 6.8303e-07 3.76042e-07"/>
+        <geom type="mesh" rgba="0.792157 0.819608 0.933333 1" mesh="IMUleft"/>
+      </body>
+      <body name="IMUright" pos="0 0.015 0.0851" quat="-2.59734e-06 0.707105 0.707108 -2.59735e-06">
+        <inertial pos="0.000870136 6.27414e-09 0.00672513" quat="0.583905 0.583905 -0.398817 0.398817" mass="0.00662927" diaginertia="2.01524e-06 1.89257e-06 9.54365e-07"/>
+        <geom type="mesh" rgba="0.792157 0.819608 0.933333 1" mesh="IMUright"/>
+      </body>
+      <body name="Bubleft" pos="0.04025 -0.07995 0.0229">
+        <inertial pos="-0.0169537 -0.000710753 1.81785e-08" quat="0.515234 0.484288 -0.515233 0.484287" mass="0.0588146" diaginertia="5.59461e-05 4.86446e-05 2.45895e-05"/>
+        <joint name="Bubleft_joint" pos="0 0 0" axis="-1 0 0" range="-0.25 3.1382" actuatorfrcrange="-10.3 10.3" armature="0.08"/>
+        <geom type="mesh" rgba="0.792157 0.819608 0.933333 1" mesh="Bubleft"/>
+        <body name="Hipleft" pos="-0.04695 0.0003 0">
+          <inertial pos="-0.000420505 0.00251977 -0.0421973" quat="0.504699 0.862412 -0.0203883 0.0332878" mass="0.226262" diaginertia="0.000137716 0.000101532 8.45504e-05"/>
+          <joint name="Hipleft_joint" pos="0 0 0" axis="0 -1 0" range="-0.651 0.651" actuatorfrcrange="-10.3 10.3" armature="0.08"/>
+          <geom type="mesh" rgba="0.792157 0.819608 0.933333 1" mesh="Hipleft_fixed"/>
+          <body name="Twistleft" pos="0.0001 -0.0003 -0.09155">
+            <inertial pos="-1.07076e-08 0.00397215 -0.0391681" quat="0.988229 -0.152984 0 0" mass="0.0860126" diaginertia="0.000122099 8.20701e-05 7.1975e-05"/>
+            <joint name="Twistleft_joint" pos="0 0 0" axis="0 0 -1" range="-3.14 3.14" actuatorfrcrange="-2.94 2.94" armature="0.08"/>
+            <geom type="mesh" rgba="0.792157 0.819608 0.933333 1" mesh="Twistleft"/>
+            <body name="Kneeleft" pos="0 0.0048 -0.09355">
+              <inertial pos="-9.06819e-05 2.18579e-05 -0.0856666" quat="0.999996 -0.00281179 7.22286e-09 2.56877e-06" mass="0.332394" diaginertia="0.00047372 0.000381551 0.000178541"/>
+              <joint name="Kneeleft_joint" pos="0 0 0" axis="0 -1 0" range="-2.2 2.2" actuatorfrcrange="-10.3 10.3" armature="0.08"/>
+              <geom type="mesh" rgba="0.792157 0.819608 0.933333 1" mesh="Kneeleft"/>
+              <body name="Footleft" pos="-0.0003 -0.00125 -0.19">
+                <inertial pos="0.036674 0.000787773 -0.0173791" quat="8.91563e-05 0.567813 0.000340765 0.823157" mass="0.213823" diaginertia="0.000295779 0.000254522 9.78886e-05"/>
+                <joint name="Footleft_joint" pos="0 0 0" axis="0 -1 0" range="-1.1381 0.7027" actuatorfrcrange="-2.94 2.94" armature="0.08"/>
+                <geom type="mesh" rgba="0.792157 0.819608 0.933333 1" mesh="Footleft"/>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+      <body name="Bubright" pos="0.04025 0.07995 0.0229">
+        <inertial pos="-0.0169537 0.000710753 -1.81785e-08" quat="0.484287 0.515233 -0.484288 0.515234" mass="0.0588146" diaginertia="5.59461e-05 4.86446e-05 2.45895e-05"/>
+        <joint name="Bubright_joint" pos="0 0 0" axis="1 0 0" range="-0.25 3.1382" actuatorfrcrange="-10.3 10.3" armature="0.08"/>
+        <geom type="mesh" rgba="0.792157 0.819608 0.933333 1" mesh="Bubright"/>
+        <body name="Hipright" pos="-0.04695 -0.0003 0">
+          <inertial pos="-0.000420522 -0.00251974 -0.0421972" quat="0.862411 0.504701 -0.0332881 0.0203894" mass="0.226261" diaginertia="0.000137716 0.000101532 8.45506e-05"/>
+          <joint name="Hipright_joint" pos="0 0 0" axis="0 -1 0" range="-0.651 0.651" actuatorfrcrange="-10.3 10.3" armature="0.08"/>
+          <geom type="mesh" rgba="0.792157 0.819608 0.933333 1" mesh="Hipright_fixed"/>
+          <body name="Twistright" pos="0.0001 0.0003 -0.09155">
+            <inertial pos="1.01134e-08 -0.00397215 -0.0391681" quat="0.988229 0.152984 0 0" mass="0.0860126" diaginertia="0.000122099 8.20701e-05 7.1975e-05"/>
+            <joint name="Twistright_joint" pos="0 0 0" axis="0 0 1" range="-3.14 3.14" actuatorfrcrange="-2.94 2.94" armature="0.08"/>
+            <geom type="mesh" rgba="0.792157 0.819608 0.933333 1" mesh="Twistright"/>
+            <body name="Kneeright" pos="0 -0.0051 -0.09355">
+              <inertial pos="9.06819e-05 -7.63338e-05 -0.0856666" quat="0.999996 0.00281179 -7.22286e-09 2.56877e-06" mass="0.332394" diaginertia="0.00047372 0.000381551 0.000178541"/>
+              <joint name="Kneeright_joint" pos="0 0 0" axis="0 -1 0" range="-2.2 2.2" actuatorfrcrange="-10.3 10.3" armature="0.08"/>
+              <geom type="mesh" rgba="0.792157 0.819608 0.933333 1" mesh="Kneeright"/>
+              <body name="Footright" pos="0.0003 0.00105 -0.19">
+                <inertial pos="0.036674 -0.000213862 -0.0172789" quat="8.91582e-05 0.567813 0.000340773 0.823157" mass="0.213823" diaginertia="0.000295779 0.000254522 9.78886e-05"/>
+                <joint name="Footright_joint" pos="0 0 0" axis="0 -1 0" range="-1.1381 0.7027" actuatorfrcrange="-2.94 2.94" armature="0.08"/>
+                <geom type="mesh" rgba="0.792157 0.819608 0.933333 1" mesh="Footright"/>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <contact>
+    <exclude name="Baselink__IMUleft" body1="Baselink" body2="IMUleft"/>
+    <exclude name="Baselink__IMUright" body1="Baselink" body2="IMUright"/>
+    <exclude name="Baselink__Bubleft" body1="Baselink" body2="Bubleft"/>
+    <exclude name="Baselink__Hipleft" body1="Baselink" body2="Hipleft"/>
+    <exclude name="Baselink__Twistleft" body1="Baselink" body2="Twistleft"/>
+    <exclude name="Baselink__Bubright" body1="Baselink" body2="Bubright"/>
+    <exclude name="Baselink__Hipright" body1="Baselink" body2="Hipright"/>
+    <exclude name="Baselink__Twistright" body1="Baselink" body2="Twistright"/>
+    <exclude name="Bubleft__Hipleft" body1="Bubleft" body2="Hipleft"/>
+    <exclude name="Bubleft__Twistleft" body1="Bubleft" body2="Twistleft"/>
+    <exclude name="Bubleft__Kneeleft" body1="Bubleft" body2="Kneeleft"/>
+    <exclude name="Hipleft__Twistleft" body1="Hipleft" body2="Twistleft"/>
+    <exclude name="Hipleft__Kneeleft" body1="Hipleft" body2="Kneeleft"/>
+    <exclude name="Footleft__Hipleft" body1="Hipleft" body2="Footleft"/>
+    <exclude name="Kneeleft__Twistleft" body1="Twistleft" body2="Kneeleft"/>
+    <exclude name="Footleft__Twistleft" body1="Twistleft" body2="Footleft"/>
+    <exclude name="Footleft__Kneeleft" body1="Kneeleft" body2="Footleft"/>
+    <exclude name="Bubright__Hipright" body1="Bubright" body2="Hipright"/>
+    <exclude name="Bubright__Twistright" body1="Bubright" body2="Twistright"/>
+    <exclude name="Bubright__Kneeright" body1="Bubright" body2="Kneeright"/>
+    <exclude name="Hipright__Twistright" body1="Hipright" body2="Twistright"/>
+    <exclude name="Hipright__Kneeright" body1="Hipright" body2="Kneeright"/>
+    <exclude name="Footright__Hipright" body1="Hipright" body2="Footright"/>
+    <exclude name="Kneeright__Twistright" body1="Twistright" body2="Kneeright"/>
+    <exclude name="Footright__Twistright" body1="Twistright" body2="Footright"/>
+    <exclude name="Footright__Kneeright" body1="Kneeright" body2="Footright"/>
+  </contact>
+
+  <actuator>
+    <general name="Bubleft_joint" joint="Bubleft_joint" ctrllimited="true" ctrlrange="-0.25 3.1382" biastype="affine" gainprm="40" biasprm="0 -40 -4"/>
+    <general name="Hipleft_joint" joint="Hipleft_joint" ctrllimited="true" ctrlrange="-0.651 0.651" biastype="affine" gainprm="40" biasprm="0 -40 -4"/>
+    <general name="Twistleft_joint" joint="Twistleft_joint" ctrllimited="true" ctrlrange="-3.14 3.14" biastype="affine" gainprm="40" biasprm="0 -40 -4"/>
+    <general name="Kneeleft_joint" joint="Kneeleft_joint" ctrllimited="true" ctrlrange="-2.2 2.2" biastype="affine" gainprm="40" biasprm="0 -40 -4"/>
+    <general name="Footleft_joint" joint="Footleft_joint" ctrllimited="true" ctrlrange="-1.1381 0.7027" biastype="affine" gainprm="40" biasprm="0 -40 -4"/>
+    <general name="Bubright_joint" joint="Bubright_joint" ctrllimited="true" ctrlrange="-0.25 3.1382" biastype="affine" gainprm="40" biasprm="0 -40 -4"/>
+    <general name="Hipright_joint" joint="Hipright_joint" ctrllimited="true" ctrlrange="-0.651 0.651" biastype="affine" gainprm="40" biasprm="0 -40 -4"/>
+    <general name="Twistright_joint" joint="Twistright_joint" ctrllimited="true" ctrlrange="-3.14 3.14" biastype="affine" gainprm="40" biasprm="0 -40 -4"/>
+    <general name="Kneeright_joint" joint="Kneeright_joint" ctrllimited="true" ctrlrange="-2.2 2.2" biastype="affine" gainprm="40" biasprm="0 -40 -4"/>
+    <general name="Footright_joint" joint="Footright_joint" ctrllimited="true" ctrlrange="-1.1381 0.7027" biastype="affine" gainprm="40" biasprm="0 -40 -4"/>
+  </actuator>
+</mujoco>

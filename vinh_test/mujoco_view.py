@@ -97,6 +97,7 @@ import xml.etree.ElementTree as ET
 
 import mujoco
 
+
 def _find_root(max_levels=5):
     """Thu muc goc de quet model URDF.
 
@@ -407,7 +408,9 @@ def play_poses(model, data, model_name, path, seg_seconds, pairs):
     if len(poses) < 2:
         sys.exit(f"'{path}' chi co {len(poses)} pose, can it nhat 2 de chay.")
     if doc.get("model") and doc["model"] != model_name:
-        print(f"  !! canh bao: file luu cho model '{doc['model']}', dang mo '{model_name}'")
+        print(
+            f"  !! canh bao: file luu cho model '{doc['model']}', dang mo '{model_name}'"
+        )
 
     idx = {}
     for i in range(model.nu):
@@ -424,8 +427,10 @@ def play_poses(model, data, model_name, path, seg_seconds, pairs):
     for name, value in poses[0]["ctrl"].items():
         data.ctrl[idx[name]] = value
 
-    print(f"  CHAY {len(poses)} pose tu '{path}', {seg_seconds}s moi doan"
-          f" (tong {seg_seconds * (len(poses) - 1):.1f}s), lap lai lien tuc")
+    print(
+        f"  CHAY {len(poses)} pose tu '{path}', {seg_seconds}s moi doan"
+        f" (tong {seg_seconds * (len(poses) - 1):.1f}s), lap lai lien tuc"
+    )
 
     steps_per_frame = max(1, round((1.0 / 60.0) / model.opt.timestep))
     seg_steps = max(1, round(seg_seconds / model.opt.timestep))
