@@ -22,9 +22,9 @@ Hai chế độ
                 tượng, không ngã — dùng để NGẮM hình dáng pose.
 
 Cách chạy (từ thư mục transformer_nam/): thêm viz kit ở cuối vì là bản isaaclab 3.0
-  ./run.sh scripts/set_pose.py --viz kit                # vật lý thật, robot tự cân bằng/ngã
-  ./run.sh scripts/set_pose.py --freeze        # đóng băng pose để ngắm
-  ./run.sh scripts/set_pose.py --headless      # không mở cửa sổ (chạy ngầm)
+  ./run.sh source/bipedal_vinh/scripts/set_pose.py --viz kit                # vật lý thật, robot tự cân bằng/ngã
+  ./run.sh source/bipedal_vinh/scripts/set_pose.py --freeze        # đóng băng pose để ngắm
+  ./run.sh source/bipedal_vinh/scripts/set_pose.py --headless      # không mở cửa sổ (chạy ngầm)
 
 Muốn ĐỔI POSE: sửa dict POSE_DEG bên dưới (đơn vị ĐỘ) rồi chạy lại. Đó là toàn
 bộ những gì bạn cần đụng tới cho công việc set-pose hằng ngày.
@@ -106,7 +106,7 @@ def main() -> None:
     # ── 3a. Bộ máy vật lý + TRỌNG LỰC ────────────────────────────────────────
     # dt = 1/120 s: nửa bước so với 60 Hz mặc định, khớp co giãn ổn định hơn.
     # gravity: vector gia tốc trọng trường, -9.81 theo trục Z (xuống đất).
-    sim_cfg = sim_utils.SimulationCfg(dt=1.0 / 120.0, gravity=(0.0, 0.0, -9.81))
+    sim_cfg = sim_utils.SimulationCfg(dt=1.0 / 60.0, gravity=(0.0, 0.0, -9.81))
     sim = SimulationContext(sim_cfg)
     sim.set_camera_view(eye=[1.6, 1.6, 1.0], target=[0.0, 0.0, 0.3])
 
