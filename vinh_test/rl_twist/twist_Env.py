@@ -16,7 +16,34 @@ class twistEnv(gym.Env):
         self.frame_skip = 10
         self.dt = self.model.opt.timestep * self.frame_skip
 
-        # action space:  10 động cơ
+        # giới hạn thời gian để tránh chạy vô tận
+        self.max_steps = 300
+        self.current_step = 0
+
+        # thêm ma sát xoắn -tránh xoay trực tiếp khớp twist
+        for i in range(self.model.ngeom):
+            if self.model.geom_type[i] != mujoco.mjtGeom.mjGEOM_PLANE:
+                self.model.geom_condim[i] = 4
+                self.model.geom_friction[i][1] = 0.05  # Lực cản khi xoay vặn
+                self.model.geom_friction[i][2] = 0.005  # Lực cản khi lăn
+
+        # ---- Lưu giá trị GỐC cho domain randomization ----------------------
+        # Randomization trong reset() sẽ tính TỪ các giá trị gốc này (nominal),
+        # KHÔNG nhân vào giá trị hiện tại. Nếu nhân dồn vào giá trị hiện tại thì
+        # sau vài trăm tập khối lượng/ma sát sẽ trôi ra vô cực.
+        self._nonplane_geoms = [
+            i
+            for i in range(self.model.ngeom)
+            if self.model.geom_type[i] != mujoco.mjtGeom.mjGEOM_PLANE
+        ]
+        self._base_id = mujoco.mj_name2id(
+            self.model, mujoco.mjtObj.mjOBJ_BODY, "Baselink"
+        )
+        self._nominal_mass = float(self.model.body_mass[self._base_id])
+        self._nominal_ipos = self.model.body_ipos[self._base_id].copy()
+        self._nominal_actfrc = self.model.jnt_actfrcrange.copy()
+
+        # action space:  10 động cơ, thêm 2 tín hiệu chạm sàn 0 là
         self.action_space = spaces.Box(
             low=-1.0,
             high=1.0,
@@ -24,9 +51,26 @@ class twistEnv(gym.Env):
             dtype=np.float32,
         )
         # observation space: 2 góc nghiêng pitch/roll, 10 position + 10 vel = 22
+        # thêm 2 tín hiệu chạm sàn contact trái phải -24 tín
         self.observation_space = spaces.Box(
-            low=-np.inf, high=np.inf, shape=(22,), dtype=np.float32
+            low=-np.inf, high=np.inf, shape=(24,), dtype=np.float32
         )
+
+    def get_foot_contact(self):
+        contact_L, contact_R = 0.0, 0.0
+        for i in range(self.data.ncon):
+            geom1_body = self.model.geom_bodyid[self.data.contact[i].geom1]
+            geom2_body = self.model.geom_bodyid[self.data.contact[i].geom2]
+
+            body1 = mujoco.mj_id2name(self.model, mujoco.mjtObj.mjOBJ_BODY, geom1_body)
+            body2 = mujoco.mj_id2name(self.model, mujoco.mjtObj.mjOBJ_BODY, geom2_body)
+
+            if body1 and body2:
+                if "Footleft" in body1 or "Footleft" in body2:
+                    contact_L = 1.0
+                if "Footright" in body1 or "Footright" in body2:
+                    contact_R = 1.0
+        return contact_L, contact_R
 
     # hàm thu thập dữ liệu state / observations
     def _get_obs(self):
@@ -48,16 +92,56 @@ class twistEnv(gym.Env):
         # 3. Lấy vận tốc quay của 10 động cơ
         joint_velocities = self.data.qvel[6:]
 
+        # lấy contact bàn chân
+        contact_L, contact_R = self.get_foot_contact()
+
         # 4. Gộp (concatenate) tất cả lại thành 1 mảng 1D duy nhất
         obs = np.concatenate(
-            [[roll, pitch], joint_positions, joint_velocities]  # 2 số  # 10 số  # 10 số
+            [
+                [roll, pitch],
+                joint_positions,
+                joint_velocities,
+                [contact_L, contact_R],
+            ]  # 2 số  # 10 số  # 10 số + 2 contact sensor o chan
         ).astype(np.float32)
-
         return obs
+
+    def _randomize(self):
+        """Domain randomization: mỗi tập một bộ tham số vật lí khác nhau.
+
+        Luôn tính TỪ giá trị gốc (nominal) đã lưu ở __init__, không nhân dồn.
+        Ép policy học chiến lược bền với sai khác sim-thực (ma sát, khối lượng,
+        trọng tâm, sức động cơ) thay vì overfit vào một sim cố định.
+        """
+        # ma sát bàn chân: trượt + xoắn — sàn thật không biết trước
+        slide = np.random.uniform(0.6, 1.4)
+        torsion = np.random.uniform(0.02, 0.12)
+        for i in self._nonplane_geoms:
+            self.model.geom_friction[i][0] = slide
+            self.model.geom_friction[i][1] = torsion
+
+        # khối lượng base: robot thật nặng hơn CAD
+        self.model.body_mass[self._base_id] = self._nominal_mass * np.random.uniform(
+            0.8, 1.5
+        )
+
+        # trọng tâm base: lắp pin/mạch làm lệch CoM ±2 cm mỗi trục
+        self.model.body_ipos[self._base_id] = self._nominal_ipos + np.random.uniform(
+            -0.02, 0.02, size=3
+        )
+
+        # trần mô-men động cơ: servo yếu đi khi nóng/quay nhanh
+        self.model.jnt_actfrcrange = self._nominal_actfrc * np.random.uniform(0.7, 1.0)
 
     # hàm reset về vị trí ban đầu
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
+
+        # đếm lại số bước cho tập mới (nếu không, số đếm trôi qua các tập)
+        self.current_step = 0
+
+        # đổi tham số vật lí cho tập này
+        self._randomize()
 
         # reset lực và vận tốc cũ
         mujoco.mj_resetData(self.model, self.data)
@@ -100,7 +184,11 @@ class twistEnv(gym.Env):
     # hàm step
     def step(self, action):
         # giới hạn mạng neural chỉ dc vặn 0.1 rad mỗi step
+        self.current_step += 1
         action_scale = 0.1
+
+        # clamp action transh vang quas ddaf
+        action = np.clip(action, -1.0, 1.0)
 
         current_joint_pos = self.data.qpos[7:]  # lay 10 goc hien tai
 
@@ -115,8 +203,8 @@ class twistEnv(gym.Env):
 
         # 3. MỞ MẮT RA NHÌN SAU KHI NHÚC NHÍCH
         observation = self._get_obs()
-
-        # 4. TÍNH ĐIỂM THƯỞNG
+        # lấy 2 biến contact ở cuối mảng observation
+        contact_L, contact_R = observation[-2], observation[-1]
 
         # a. Lấy dữ liệu cần thiết
         base_z = self.data.qpos[2]  # Chiều cao ủa hông so với mặt đất
@@ -134,17 +222,40 @@ class twistEnv(gym.Env):
         twist_left = self.data.qpos[self.model.jnt_qposadr[twist_L_id]]
         twist_right = self.data.qpos[self.model.jnt_qposadr[twist_R_id]]
 
+        # Đọc VẬN TỐC hiện tại của khớp Twist
+        twist_L_vel = self.data.qvel[self.model.jnt_dofadr[twist_L_id]]
+        twist_R_vel = self.data.qvel[self.model.jnt_dofadr[twist_R_id]]
+
         # REWARD
-        survival_reward = 1.0  # thưởng sinh tồn
+
         # error càng cần 0 thì điểm thưởng càng nhiều theo hàm số e mũ. max là 2.0
         twist_error = abs(twist_left) + abs(twist_right)
-        twist_reward = 2.0 * np.exp(-3.0 * twist_error)
+        twist_reward = 2.0 * np.exp(-1.0 * twist_error)
+
+        # hàm để ép điểm: đứng im thì lỗ
+        progress_reward = 3.0 - twist_error
+
+        # phạt nghiên base quá
+        orientation_penalty = 2.0 * (abs(roll) + abs(pitch))
 
         # phạt năng lượng: trừ điểm nếu xuất action quá mạnh
         energy_penalty = 0.02 * np.sum(np.square(action))
 
+        # phạt nhấc chân lên: nếu đang chạm đất mà cố tình twist thì trừ
+        twist_penalty = 0.0
+        if contact_L > 0.5:
+            twist_penalty += abs(twist_L_vel) * 0.5  # vận tốc càng lớn phạt càng nhiều
+        if contact_R > 0.5:
+            twist_penalty += abs(twist_R_vel) * 0.5
+
         # tổng điểm
-        reward = survival_reward + twist_reward - energy_penalty
+        reward = (
+            progress_reward
+            - energy_penalty
+            - twist_penalty
+            + twist_reward
+            - orientation_penalty
+        )
 
         # kiểm tra xem có bị ngã không:
         terminated = False
@@ -155,7 +266,8 @@ class twistEnv(gym.Env):
             terminated = True
             reward -= 100.0
 
-        truncated = False
+        # hết thời gian tập (không phải ngã) — cắt để tập không chạy vô tận
+        truncated = self.current_step >= self.max_steps
         info = {}
 
         return observation, reward, terminated, truncated, info
