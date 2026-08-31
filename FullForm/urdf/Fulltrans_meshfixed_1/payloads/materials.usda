@@ -1,0 +1,57 @@
+#usda 1.0
+(
+    customLayerData = {
+        string creator = "URDF USD Converter v0.1.3"
+    }
+    doc = """Generated from Composed Stage of root layer /tmp/tmphwca36iz/Fulltrans.usdc
+
+
+Generated from Composed Stage of root layer /tmp/urdf_import_Fulltrans_meshfixed_6bi9msub/usdex_Fulltrans_meshfixed/Fulltrans.usdc
+
+
+Generated from Composed Stage of root layer /tmp/urdf_import_Fulltrans_meshfixed_6bi9msub/temp_Fulltrans_meshfixed/Fulltrans_meshfixed.usd
+
+
+Generated from Composed Stage of root layer /home/cat21/Documents/projects/Transformer/Transform_bipedal_todai/FullForm/urdf/Fulltrans_meshfixed_1/payloads/base.usd
+"""
+    kilogramsPerUnit = 1
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+
+def Scope "Materials"
+{
+    def Material "material_1"
+    {
+        color3f inputs:diffuseColor = (0.5906189, 0.63759696, 0.8549927)
+        float inputs:metallic = 0
+        float inputs:opacity = 1
+        float inputs:roughness = 0.5
+        token inputs:wrapMode = "repeat"
+        token outputs:displacement (
+            displayGroup = "Outputs"
+        )
+        prepend token outputs:displacement.connect = </Materials/material_1/PreviewSurface.outputs:displacement>
+        token outputs:surface (
+            displayGroup = "Outputs"
+        )
+        prepend token outputs:surface.connect = </Materials/material_1/PreviewSurface.outputs:surface>
+        token outputs:volume (
+            displayGroup = "Outputs"
+        )
+
+        def Shader "PreviewSurface" (
+            apiSchemas = ["NodeDefAPI"]
+        )
+        {
+            token info:id = "UsdPreviewSurface"
+            prepend color3f inputs:diffuseColor.connect = </Materials/material_1.inputs:diffuseColor>
+            prepend float inputs:metallic.connect = </Materials/material_1.inputs:metallic>
+            prepend float inputs:opacity.connect = </Materials/material_1.inputs:opacity>
+            prepend float inputs:roughness.connect = </Materials/material_1.inputs:roughness>
+            token outputs:displacement
+            token outputs:surface
+        }
+    }
+}
+

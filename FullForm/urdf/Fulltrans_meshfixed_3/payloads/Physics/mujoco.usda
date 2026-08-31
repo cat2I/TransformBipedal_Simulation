@@ -1,0 +1,377 @@
+#usda 1.0
+(
+    customLayerData = {
+        string creator = "URDF USD Converter v0.1.3"
+    }
+    defaultPrim = "Fulltrans"
+    doc = """Generated from Composed Stage of root layer /tmp/tmphg9s2iwt/Fulltrans.usdc
+
+
+Generated from Composed Stage of root layer /tmp/urdf_import_Fulltrans_meshfixed_q8sg70kh/usdex_Fulltrans_meshfixed/Fulltrans.usdc
+
+
+Generated from Composed Stage of root layer /tmp/urdf_import_Fulltrans_meshfixed_q8sg70kh/temp_Fulltrans_meshfixed/Fulltrans_meshfixed.usd
+
+
+Generated from Composed Stage of root layer /home/cat21/Documents/projects/Transformer/Transform_bipedal_todai/FullForm/urdf/Fulltrans_meshfixed_3/payloads/base.usd
+"""
+    kilogramsPerUnit = 1
+    metersPerUnit = 1
+    subLayers = [
+        @./physics.usda@
+    ]
+    upAxis = "Z"
+)
+
+over "Fulltrans"
+{
+    over "Physics"
+    {
+        def MjcActuator "Bubleft_joint_actuator"
+        {
+            uniform double[] mjc:biasPrm = [0, -174.53292846679688, -8.726646423339844, 0, 0, 0, 0, 0, 0, 0]
+            uniform token mjc:biasType = "affine"
+            uniform double mjc:forceRange:max = 10.300000190734863
+            uniform double mjc:forceRange:min = -10.300000190734863
+            uniform double[] mjc:gainPrm = [174.53292846679688, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            uniform token mjc:gainType = "fixed"
+            custom rel mjc:target
+            prepend rel mjc:target = </Fulltrans/Physics/Bubleft_joint>
+        }
+
+        def MjcActuator "Hipleft_joint_actuator"
+        {
+            uniform double[] mjc:biasPrm = [0, -174.53292846679688, -8.726646423339844, 0, 0, 0, 0, 0, 0, 0]
+            uniform token mjc:biasType = "affine"
+            uniform double mjc:forceRange:max = 10.300000190734863
+            uniform double mjc:forceRange:min = -10.300000190734863
+            uniform double[] mjc:gainPrm = [174.53292846679688, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            uniform token mjc:gainType = "fixed"
+            custom rel mjc:target
+            prepend rel mjc:target = </Fulltrans/Physics/Hipleft_joint>
+        }
+
+        def MjcActuator "Twistleft_joint_actuator"
+        {
+            uniform double[] mjc:biasPrm = [0, -174.53292846679688, -8.726646423339844, 0, 0, 0, 0, 0, 0, 0]
+            uniform token mjc:biasType = "affine"
+            uniform double mjc:forceRange:max = 2.940000057220459
+            uniform double mjc:forceRange:min = -2.940000057220459
+            uniform double[] mjc:gainPrm = [174.53292846679688, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            uniform token mjc:gainType = "fixed"
+            custom rel mjc:target
+            prepend rel mjc:target = </Fulltrans/Physics/Twistleft_joint>
+        }
+
+        def MjcActuator "Kneeleft_joint_actuator"
+        {
+            uniform double[] mjc:biasPrm = [0, -174.53292846679688, -8.726646423339844, 0, 0, 0, 0, 0, 0, 0]
+            uniform token mjc:biasType = "affine"
+            uniform double mjc:forceRange:max = 10.300000190734863
+            uniform double mjc:forceRange:min = -10.300000190734863
+            uniform double[] mjc:gainPrm = [174.53292846679688, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            uniform token mjc:gainType = "fixed"
+            custom rel mjc:target
+            prepend rel mjc:target = </Fulltrans/Physics/Kneeleft_joint>
+        }
+
+        def MjcActuator "Footleft_joint_actuator"
+        {
+            uniform double[] mjc:biasPrm = [0, -174.53292846679688, -8.726646423339844, 0, 0, 0, 0, 0, 0, 0]
+            uniform token mjc:biasType = "affine"
+            uniform double mjc:forceRange:max = 2.940000057220459
+            uniform double mjc:forceRange:min = -2.940000057220459
+            uniform double[] mjc:gainPrm = [174.53292846679688, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            uniform token mjc:gainType = "fixed"
+            custom rel mjc:target
+            prepend rel mjc:target = </Fulltrans/Physics/Footleft_joint>
+        }
+
+        def MjcActuator "Bubright_joint_actuator"
+        {
+            uniform double[] mjc:biasPrm = [0, -174.53292846679688, -8.726646423339844, 0, 0, 0, 0, 0, 0, 0]
+            uniform token mjc:biasType = "affine"
+            uniform double mjc:forceRange:max = 10.300000190734863
+            uniform double mjc:forceRange:min = -10.300000190734863
+            uniform double[] mjc:gainPrm = [174.53292846679688, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            uniform token mjc:gainType = "fixed"
+            custom rel mjc:target
+            prepend rel mjc:target = </Fulltrans/Physics/Bubright_joint>
+        }
+
+        def MjcActuator "Hipright_joint_actuator"
+        {
+            uniform double[] mjc:biasPrm = [0, -174.53292846679688, -8.726646423339844, 0, 0, 0, 0, 0, 0, 0]
+            uniform token mjc:biasType = "affine"
+            uniform double mjc:forceRange:max = 10.300000190734863
+            uniform double mjc:forceRange:min = -10.300000190734863
+            uniform double[] mjc:gainPrm = [174.53292846679688, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            uniform token mjc:gainType = "fixed"
+            custom rel mjc:target
+            prepend rel mjc:target = </Fulltrans/Physics/Hipright_joint>
+        }
+
+        def MjcActuator "Twistright_joint_actuator"
+        {
+            uniform double[] mjc:biasPrm = [0, -174.53292846679688, -8.726646423339844, 0, 0, 0, 0, 0, 0, 0]
+            uniform token mjc:biasType = "affine"
+            uniform double mjc:forceRange:max = 2.940000057220459
+            uniform double mjc:forceRange:min = -2.940000057220459
+            uniform double[] mjc:gainPrm = [174.53292846679688, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            uniform token mjc:gainType = "fixed"
+            custom rel mjc:target
+            prepend rel mjc:target = </Fulltrans/Physics/Twistright_joint>
+        }
+
+        def MjcActuator "Kneeright_joint_actuator"
+        {
+            uniform double[] mjc:biasPrm = [0, -174.53292846679688, -8.726646423339844, 0, 0, 0, 0, 0, 0, 0]
+            uniform token mjc:biasType = "affine"
+            uniform double mjc:forceRange:max = 10.300000190734863
+            uniform double mjc:forceRange:min = -10.300000190734863
+            uniform double[] mjc:gainPrm = [174.53292846679688, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            uniform token mjc:gainType = "fixed"
+            custom rel mjc:target
+            prepend rel mjc:target = </Fulltrans/Physics/Kneeright_joint>
+        }
+
+        def MjcActuator "Footright_joint_actuator"
+        {
+            uniform double[] mjc:biasPrm = [0, -174.53292846679688, -8.726646423339844, 0, 0, 0, 0, 0, 0, 0]
+            uniform token mjc:biasType = "affine"
+            uniform double mjc:forceRange:max = 2.940000057220459
+            uniform double mjc:forceRange:min = -2.940000057220459
+            uniform double[] mjc:gainPrm = [174.53292846679688, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            uniform token mjc:gainType = "fixed"
+            custom rel mjc:target
+            prepend rel mjc:target = </Fulltrans/Physics/Footright_joint>
+        }
+
+        over "root_joint"
+        {
+        }
+
+        over "IMUleft_joint"
+        {
+        }
+
+        over "IMUright_joint"
+        {
+        }
+
+        over "Bubleft_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+        )
+        {
+        }
+
+        over "Hipleft_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+        )
+        {
+        }
+
+        over "Twistleft_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+        )
+        {
+        }
+
+        over "Kneeleft_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+        )
+        {
+        }
+
+        over "Footleft_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+        )
+        {
+        }
+
+        over "Bubright_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+        )
+        {
+        }
+
+        over "Hipright_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+        )
+        {
+        }
+
+        over "Twistright_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+        )
+        {
+        }
+
+        over "Kneeright_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+        )
+        {
+        }
+
+        over "Footright_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+        )
+        {
+        }
+    }
+
+    over "Geometry"
+    {
+        over "Baselink"
+        {
+            over "IMUleft"
+            {
+                over "IMUleft"
+                {
+                }
+
+                over "IMUleft_1"
+                {
+                }
+            }
+
+            over "IMUright"
+            {
+                over "IMUright"
+                {
+                }
+
+                over "IMUright_1"
+                {
+                }
+            }
+
+            over "Bubleft"
+            {
+                over "Hipleft"
+                {
+                    over "Twistleft"
+                    {
+                        over "Kneeleft"
+                        {
+                            over "Footleft"
+                            {
+                                over "Footleft"
+                                {
+                                }
+
+                                over "Footleft_1"
+                                {
+                                }
+                            }
+
+                            over "Kneeleft"
+                            {
+                            }
+
+                            over "Kneeleft_1"
+                            {
+                            }
+                        }
+
+                        over "Twistleft"
+                        {
+                        }
+
+                        over "Twistleft_1"
+                        {
+                        }
+                    }
+
+                    over "Hipleft_fixed"
+                    {
+                    }
+
+                    over "Hipleft_fixed_1"
+                    {
+                    }
+                }
+
+                over "Bubleft"
+                {
+                }
+
+                over "Bubleft_1"
+                {
+                }
+            }
+
+            over "Bubright"
+            {
+                over "Hipright"
+                {
+                    over "Twistright"
+                    {
+                        over "Kneeright"
+                        {
+                            over "Footright"
+                            {
+                                over "Footright"
+                                {
+                                }
+
+                                over "Footright_1"
+                                {
+                                }
+                            }
+
+                            over "Kneeright"
+                            {
+                            }
+
+                            over "Kneeright_1"
+                            {
+                            }
+                        }
+
+                        over "Twistright"
+                        {
+                        }
+
+                        over "Twistright_1"
+                        {
+                        }
+                    }
+
+                    over "Hipright_fixed"
+                    {
+                    }
+
+                    over "Hipright_fixed_1"
+                    {
+                    }
+                }
+
+                over "Bubright"
+                {
+                }
+
+                over "Bubright_1"
+                {
+                }
+            }
+
+            over "Baselink"
+            {
+            }
+
+            over "Baselink_1"
+            {
+            }
+        }
+    }
+
+    over "Materials"
+    {
+    }
+
+    over "VisualMaterials"
+    {
+    }
+}
+

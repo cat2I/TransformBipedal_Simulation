@@ -1,4 +1,30 @@
 3DOFTrans là giới hạn khớp hông, ko bánh xe
 FullForm là mở khóa toàn bộ (có giới hạn quay hông), có bánh xe
 Newsimple là giới hạn hông, có bánh xe
-Fulltrans mở khóa toàn bộ hông, có bánh xe, 
+Fulltrans mở khóa toàn bộ hông, có bánh xe
+
+=== Bật thử model trong MuJoCo (xem nhanh, không cần Isaac Sim) ===
+
+source /home/cat21/mujoco_env/bin/activate
+python mujoco_view.py --list                 # liệt kê model có sẵn
+python mujoco_view.py Fulltrans               # bản gốc (còn lỗi xác Twist)
+python mujoco_view.py Fulltrans_meshfixed     # bản đã cắt xác Twist ra khỏi Hipleft/Hipright.STL
+
+=== Bật thử model trong Isaac Sim (chỉ Fulltrans 10DOF có task đăng ký) ===
+
+cd transformer_nam
+
+# Đứng yên, KHÔNG chạy thuật toán/gait gì cả — chỉ để xem hình dáng/vật lý robot
+./run.sh scripts/zero_agent.py --task Transformer-Walk10DOF-Direct-v0 --num_envs 1
+
+# Actions ngẫu nhiên mỗi bước — dùng để soi khớp Twist có bị "hồn lìa khỏi xác"
+# giống MuJoCo hay không, vì zero_agent đứng yên sẽ không thấy khớp Twist di chuyển
+./run.sh scripts/random_agent.py --task Transformer-Walk10DOF-Direct-v0 --num_envs 1
+
+# Chạy theo policy đã train sẵn (cần đã có checkpoint .pt, không bắt buộc để xem model)
+./run.sh scripts/rsl_rl/play.py --task Transformer-Walk10DOF-Direct-v0 --num_envs 1 \
+    --checkpoint "<đường dẫn đầy đủ tới file model_xxx.pt>"
+
+Lưu ý: Isaac Sim dùng file USD đã đóng gói sẵn ở transformer_nam/asset/configuration/Fulltrans_base.usd,
+KHÔNG đọc trực tiếp URDF/STL — nên sửa STL (Hipleft_fixed.STL...) không tự sửa được USD này.
+Nếu thấy lỗi xác Twist xuất hiện cả trong Isaac Sim, phải sửa/re-export riêng file USD đó.
