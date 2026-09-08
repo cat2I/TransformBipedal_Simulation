@@ -9,6 +9,7 @@ source /home/cat21/mujoco_env/bin/activate
 python mujoco_view.py --list                 # liệt kê model có sẵn
 python mujoco_view.py Fulltrans               # bản gốc (còn lỗi xác Twist)
 python mujoco_view.py Fulltrans_meshfixed     # bản đã cắt xác Twist ra khỏi Hipleft/Hipright.STL
+python isaacsim_inspect.py Fulltrans_meshfixed
 
 === Bật thử model trong Isaac Sim (chỉ Fulltrans 10DOF có task đăng ký) ===
 
