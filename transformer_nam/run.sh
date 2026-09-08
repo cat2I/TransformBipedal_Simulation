@@ -17,7 +17,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CONDA_ENV="${ISAAC_CONDA_ENV:-isaacsim}"
+CONDA_ENV="${ISAAC_CONDA_ENV:-isaaclab30}"
 
 if [[ $# -eq 0 ]]; then
     echo "Dùng: $0 <script.py> [tham số...]" >&2
@@ -56,6 +56,11 @@ export MKL_NUM_THREADS="${MKL_NUM_THREADS:-8}"
 export __NV_PRIME_RENDER_OFFLOAD=1
 export __VK_LAYER_NV_optimus=NVIDIA_only
 export __GLX_VENDOR_LIBRARY_NAME=nvidia
+
+export QT_QPA_PLATFORM=xcb
+export GDK_BACKEND=x11
+export SDL_VIDEODRIVER=x11
+
 ulimit -n 65536 2>/dev/null || true
 
 # --- chạy --------------------------------------------------------------------

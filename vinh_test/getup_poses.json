@@ -1,0 +1,95 @@
+{
+  "model": "Fulltrans_meshfixed",
+  "poses": [
+    {
+      "name": "K1 nam bet, chan xoac",
+      "ctrl": {
+        "Bubleft_joint": 2.16,
+        "Bubright_joint": 2.16,
+        "Twistleft_joint": 1.63,
+        "Twistright_joint": 1.63,
+        "Kneeleft_joint": -1.17,
+        "Kneeright_joint": -1.17,
+        "Footleft_joint": -0.982,
+        "Footright_joint": -0.982,
+        "Hipleft_joint": 0.0,
+        "Hipright_joint": 0.0
+      }
+    },
+    {
+      "name": "K2 gap goi lai",
+      "ctrl": {
+        "Bubleft_joint": 2.16,
+        "Bubright_joint": 2.16,
+        "Twistleft_joint": 1.63,
+        "Twistright_joint": 1.63,
+        "Kneeleft_joint": -1.94,
+        "Kneeright_joint": -1.94,
+        "Footleft_joint": -0.282,
+        "Footright_joint": -0.282,
+        "Hipleft_joint": 0.0,
+        "Hipright_joint": 0.0
+      }
+    },
+    {
+      "name": "K3 khep chan, ngoi xom",
+      "ctrl": {
+        "Bubleft_joint": 1.31,
+        "Bubright_joint": 1.31,
+        "Twistleft_joint": 1.6,
+        "Twistright_joint": 1.6,
+        "Kneeleft_joint": -1.56,
+        "Kneeright_joint": -1.56,
+        "Footleft_joint": 0.27,
+        "Footright_joint": 0.27,
+        "Hipleft_joint": 0.0,
+        "Hipright_joint": 0.0
+      }
+    },
+    {
+      "name": "K4 nhom len",
+      "ctrl": {
+        "Bubleft_joint": 0.868,
+        "Bubright_joint": 0.868,
+        "Twistleft_joint": 1.6,
+        "Twistright_joint": 1.6,
+        "Kneeleft_joint": -1.56,
+        "Kneeright_joint": -1.56,
+        "Footleft_joint": 0.7027,
+        "Footright_joint": 0.7027,
+        "Hipleft_joint": 0.0,
+        "Hipright_joint": 0.0
+      }
+    },
+    {
+      "name": "K5 duoi chan",
+      "ctrl": {
+        "Bubleft_joint": 0.428,
+        "Bubright_joint": 0.428,
+        "Twistleft_joint": 1.51,
+        "Twistright_joint": 1.51,
+        "Kneeleft_joint": -0.77,
+        "Kneeright_joint": -0.77,
+        "Footleft_joint": 0.325,
+        "Footright_joint": 0.325,
+        "Hipleft_joint": 0.0,
+        "Hipright_joint": 0.0
+      }
+    },
+    {
+      "name": "K6 dung thang",
+      "ctrl": {
+        "Bubleft_joint": 0.0719,
+        "Bubright_joint": 0.0719,
+        "Twistleft_joint": 1.51,
+        "Twistright_joint": 1.51,
+        "Kneeleft_joint": -0.044,
+        "Kneeright_joint": -0.044,
+        "Footleft_joint": -0.107,
+        "Footright_joint": -0.107,
+        "Hipleft_joint": 0.0,
+        "Hipright_joint": 0.0
+      }
+    }
+  ]
+}
