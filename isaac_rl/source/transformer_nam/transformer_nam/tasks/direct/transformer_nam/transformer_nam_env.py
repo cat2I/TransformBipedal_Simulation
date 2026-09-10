@@ -15,7 +15,16 @@ from isaaclab.sim.spawners import RigidBodyMaterialCfg
 from isaaclab.sim.utils import bind_physics_material
 from random import uniform
 
-from .transformer_config import TRANSFORMER_CFG
+# transformer_config.py định nghĩa TRANSFORMER_CFG HAI LẦN: dòng 10 (NewSimple,
+# 6 khớp) rồi dòng 103 ghi đè bằng FullForm111 (8 khớp). Python giữ cái sau, nên
+# import từ đó làm env 6 khớp này nhận robot 8 khớp và chết ngay lúc reset:
+#     AssertionError: 'joint_friction_coeff' Shape mismatch: [1, 6] != (1, 8)
+#
+# transformer_config_3dof.py mới là config model_349.pt đã train (tên "3dof" =
+# 3 khớp MỖI CHÂN). Đối chiếu params/env.yaml của run 2026-03-19_13-18-11_work:
+# Hip 0.4363 rad = 25°, Knee -0.8727 = -50°, Foot 25°, đúng 6 khớp, NewSimple.usd
+# — khớp từng số với file này.
+from .transformer_config_3dof import TRANSFORMER_CFG
 
 from ._lab3_compat import as_torch, imu_quat_w
 
@@ -112,6 +121,19 @@ class TransformerWalkEnvCfg(DirectRLEnvCfg):
 
     imu_drift_rate: float = 0.0001
 
+    # Bias IMU cố định dùng khi domain_rand=False. Trước đây hard-code trong
+    # _get_observations nên không override được từ dòng lệnh — mà đó chính là
+    # thứ cần tắt khi muốn phát lại một checkpoint cũ đúng điều kiện lúc train.
+    # Giá trị mặc định giữ nguyên như cũ, không đổi hành vi.
+    imu_fixed_bias: tuple = (0.0, -0.193, 0.0)
+
+    # Hằng số của ROBOT, theo thứ tự [Hip_L, Hip_R, Knee_L, Knee_R, Ankle_L, Ankle_R].
+    # Mặc định là số của NewSimple.usd. Robot khác trục khớp thì override từ dòng lệnh
+    # (SimpleTrans.usd đảo dấu cả ba: start_pos [-25,-25,50,50,-25,-25]).
+    servo_max: tuple = (30, 30, -45, -45, 30, 30)
+    servo_min: tuple = (20, 20, -55, -55, 20, 20)
+    start_pos: tuple = (25, 25, -50, -50, 25, 25)
+
 class TransformerWalkEnv(DirectRLEnv):
     """Direct RL environment for Transformer (6 DOF)"""
     
@@ -127,17 +149,22 @@ class TransformerWalkEnv(DirectRLEnv):
         self.obj = self.cfg.obj
         
         # [Hip_L, Hip_R, Knee_L, Knee_R, Ankle_L, Ankle_R]
+        #
+        # Đọc từ cfg (mặc định giữ nguyên số cũ của NewSimple, không đổi hành vi).
+        # Trước đây ba giá trị này hard-code trong thân hàm nên KHÔNG override được,
+        # mà chúng lại là thứ định nghĩa phép chuẩn hoá observation:
+        #     cmd_act = (cmd_actions - servo_min) / (servo_max - servo_min) * 2 - 1
+        # Robot khác trục khớp (SimpleTrans ngược dấu NewSimple) thì phải đổi theo,
+        # nếu không policy nhận thang đo sai hoàn toàn.
         self.servo_max = torch.tensor(
-            [30, 30, -45, -45, 30, 30],  
-            device=self.device, dtype=torch.int
+            list(self.cfg.servo_max), device=self.device, dtype=torch.int
         )
         self.servo_min = torch.tensor(
-            [20, 20, -55, -55, 20, 20],
-            device=self.device, dtype=torch.int
+            list(self.cfg.servo_min), device=self.device, dtype=torch.int
         )
-        
+
         # [Hip_L, Hip_R, Knee_L, Knee_R, Ankle_L, Ankle_R]
-        start_pos = [25, 25, -50, -50, 25, 25]  
+        start_pos = list(self.cfg.start_pos)
         self.base_pose = torch.tensor(
             [start_pos for _ in range(self.num_envs)], 
             device=self.device, dtype=torch.float32
@@ -230,18 +257,25 @@ class TransformerWalkEnv(DirectRLEnv):
             orient = orient_raw + self.imu_bias
         else:
             # Nếu không random, dùng bias cố định trung bình từ real
-            fixed_bias = torch.tensor([0.0, -0.193, 0.0], device=self.device)
+            fixed_bias = torch.tensor(self.cfg.imu_fixed_bias, device=self.device)
             orient = orient_raw + fixed_bias
 
         # 2. Áp dụng noise Gaussian (giống thực tế)
-        orient_noise = gaussian_noise(orient, GaussianNoiseCfg(mean=0.0, std=self.cfg.imu_noise_std["orientation"]))
-        gyro_noise_base = gaussian_noise(angular_vel_raw, GaussianNoiseCfg(mean=0.0, std=self.cfg.imu_noise_std["angular_velocity"]))
-
-        # GY (pitch rate) noise lớn hơn khi có motion (từ data real GY std cao)
-        gyro_noise = gyro_noise_base
-
-        orient += orient_noise
-        angular_vel = angular_vel_raw + gyro_noise
+        #
+        # SỬA 2026-09-10 — trước đây khối này NHÂN ĐÔI tín hiệu IMU:
+        #     orient_noise = gaussian_noise(orient, cfg)   # gaussian_noise TRẢ VỀ orient + nhiễu
+        #     orient += orient_noise                       # -> orient = 2*orient + nhiễu
+        # GaussianNoiseCfg.operation mặc định là "add", và noise_model.gaussian_noise
+        # trả về `data + mean + std*randn` chứ KHÔNG trả về riêng phần nhiễu. Cộng
+        # thêm lần nữa là nhân đôi. Cả roll/pitch lẫn gyro đều bị.
+        #
+        # Hậu quả đo được: pitch chạm trần ±1 rad suốt 41% thời gian, gz chạm
+        # ±2 rad/s 30% thời gian -> policy mù đúng lúc cần cứu thăng bằng, và mọi
+        # checkpoint train trước khi bug xuất hiện đều ngã sau vài bước.
+        #
+        # Bản tháng 3 (commit 1752c9a) viết đúng: `orient = gaussian_noise(orient, cfg)`.
+        orient = gaussian_noise(orient, GaussianNoiseCfg(mean=0.0, std=self.cfg.imu_noise_std["orientation"]))
+        angular_vel = gaussian_noise(angular_vel_raw, GaussianNoiseCfg(mean=0.0, std=self.cfg.imu_noise_std["angular_velocity"]))
 
         # 3. Thêm drift chậm (low-frequency bias change)
         dt = 0.005  # simulation dt

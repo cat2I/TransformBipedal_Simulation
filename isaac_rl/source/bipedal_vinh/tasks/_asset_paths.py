@@ -26,7 +26,7 @@ from pathlib import Path
 
 # Thư mục nào tìm trước. ``_archive`` để cuối vì đó là biến thể đã ngừng dùng:
 # nếu một tên file tồn tại ở cả hai nơi, bản đang dùng phải thắng.
-_SEARCH_ORDER = ("fulltrans", "newsimple", "trans3dof")
+_SEARCH_ORDER = ("fulltrans", "newsimple", "simpletrans", "trans3dof")
 
 
 def _assets_root() -> Path:

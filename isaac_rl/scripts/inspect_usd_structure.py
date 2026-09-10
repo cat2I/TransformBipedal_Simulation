@@ -1,8 +1,12 @@
 """Inspect USD file structure to verify paths"""
 
+import os
 from pxr import Usd
 
-usd_path = "/home/tatung/Desktop/Transform_bipedal/Transformer_IsaacLab/asset/Transformer.usd"
+# Đường dẫn tương đối từ vị trí script → assets/fulltrans/usd/
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+_ASSETS_USD = os.path.join(_SCRIPT_DIR, "..", "assets", "fulltrans", "usd")
+usd_path = os.path.join(_ASSETS_USD, "Fulltrans10DOF.usd")
 stage = Usd.Stage.Open(usd_path)
 
 print("\n🔍 USD FILE STRUCTURE:")

@@ -17,7 +17,13 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CONDA_ENV="${ISAAC_CONDA_ENV:-isaaclab30}"
+
+# Tên conda env khác nhau giữa các máy trong nhóm: máy này là 'isaacsim', máy
+# Vinh là 'isaaclab30'. Trước đây dòng này hard-code một tên nên máy còn lại
+# luôn chết ở bước kiểm tra env, TRƯỚC cả khi đọc tham số — nên mọi cờ như
+# --load_run trông như "không dùng được". Giờ dò trong danh sách ứng viên và
+# lấy env đầu tiên có thật; đặt ISAAC_CONDA_ENV để ép một tên cụ thể.
+ISAAC_ENV_CANDIDATES=(isaacsim isaaclab30 isaaclab)
 
 if [[ $# -eq 0 ]]; then
     echo "Dùng: $0 <script.py> [tham số...]" >&2
@@ -34,10 +40,27 @@ fi
 # shellcheck disable=SC1091
 source "$CONDA_BASE/etc/profile.d/conda.sh"
 
-if ! conda env list | grep -qE "^${CONDA_ENV}[[:space:]]"; then
-    echo "[LỖI] Không có conda env '${CONDA_ENV}'. Các env hiện có:" >&2
-    conda env list >&2
-    exit 1
+env_exists() { conda env list | grep -qE "^${1}[[:space:]]"; }
+
+if [[ -n "${ISAAC_CONDA_ENV:-}" ]]; then
+    # Người dùng ép tên cụ thể -> tôn trọng, sai thì báo luôn chứ không dò tiếp.
+    CONDA_ENV="$ISAAC_CONDA_ENV"
+    if ! env_exists "$CONDA_ENV"; then
+        echo "[LỖI] ISAAC_CONDA_ENV='${CONDA_ENV}' nhưng env đó không tồn tại." >&2
+        conda env list >&2
+        exit 1
+    fi
+else
+    CONDA_ENV=""
+    for candidate in "${ISAAC_ENV_CANDIDATES[@]}"; do
+        if env_exists "$candidate"; then CONDA_ENV="$candidate"; break; fi
+    done
+    if [[ -z "$CONDA_ENV" ]]; then
+        echo "[LỖI] Không tìm thấy conda env nào trong: ${ISAAC_ENV_CANDIDATES[*]}" >&2
+        echo "       Đặt ISAAC_CONDA_ENV=<tên> nếu env của bạn tên khác. Env hiện có:" >&2
+        conda env list >&2
+        exit 1
+    fi
 fi
 conda activate "$CONDA_ENV"
 

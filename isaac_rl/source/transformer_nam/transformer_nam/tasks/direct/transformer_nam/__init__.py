@@ -49,17 +49,24 @@ gym.register(
     },
 )
 
-# ── OLD: 6 DOF trên NewSimple.usd (model_349.pt đã train bằng config này) ──
-# Giữ lại để rollback / so sánh, không dùng cho training mới.
-# gym.register(
-#     id="Transformer-Walk-Direct-v0",
-#     entry_point=f"{__name__}.transformer_nam_env:TransformerWalkEnv",
-#     disable_env_checker=True,
-#     kwargs={
-#         "env_cfg_entry_point": f"{__name__}.transformer_nam_env:TransformerWalkEnvCfg",
-#         "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:TransformerWalkPPORunnerCfg",
-#     },
-# )
+# ── 6 DOF trên NewSimple.usd — asset của model_349.pt ────────────────────────
+# BẬT LẠI 2026-09-09. Đây là policy đứng sau 0319.gif (robot thật đi bộ):
+# truy ngược từ trajectory_exports/trajectory_20260319_132712.json, đối chiếu
+# đầu ra mạng với raw_actions đã ghi -> khớp run 2026-03-19_13-18-11_work với
+# sai số trung vị 0.0064 (á quân 1.71, chênh 270 lần).
+#
+# KHÔNG thay bằng Transformer-Walk10DOF6-Direct-v0 dù cũng là 44/6: task đó
+# chạy trên Fulltrans10DOF.usd, còn model_349 học trên NewSimple.usd. Kích
+# thước khớp nhưng robot khác -> phép đo vô nghĩa.
+gym.register(
+    id="Transformer-Walk-Direct-v0",
+    entry_point=f"{__name__}.transformer_nam_env:TransformerWalkEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.transformer_nam_env:TransformerWalkEnvCfg",
+        "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:TransformerWalkPPORunnerCfg",
+    },
+)
 
 
 
