@@ -37,3 +37,6 @@ Thumbs.db
 
 # Large USD files (optional - nếu quá lớn thì uncomment)
 # *.usd
+
+# MuJoCo tu sinh moi lan chay
+**/MUJOCO_LOG.TXT

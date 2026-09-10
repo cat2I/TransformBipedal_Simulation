@@ -13,7 +13,7 @@ python isaacsim_inspect.py Fulltrans_meshfixed
 
 === Bật thử model trong Isaac Sim (chỉ Fulltrans 10DOF có task đăng ký) ===
 
-cd transformer_nam
+cd isaac_rl
 
 # Đứng yên, KHÔNG chạy thuật toán/gait gì cả — chỉ để xem hình dáng/vật lý robot
 ./run.sh scripts/zero_agent.py --task Transformer-Walk10DOF-Direct-v0 --num_envs 1
@@ -26,6 +26,6 @@ cd transformer_nam
 ./run.sh scripts/rsl_rl/play.py --task Transformer-Walk10DOF-Direct-v0 --num_envs 1 \
     --checkpoint "<đường dẫn đầy đủ tới file model_xxx.pt>"
 
-Lưu ý: Isaac Sim dùng file USD đã đóng gói sẵn ở transformer_nam/asset/configuration/Fulltrans_base.usd,
+Lưu ý: Isaac Sim dùng file USD đã đóng gói sẵn ở assets/fulltrans/usd/configuration/Fulltrans_base.usd,
 KHÔNG đọc trực tiếp URDF/STL — nên sửa STL (Hipleft_fixed.STL...) không tự sửa được USD này.
 Nếu thấy lỗi xác Twist xuất hiện cả trong Isaac Sim, phải sửa/re-export riêng file USD đó.

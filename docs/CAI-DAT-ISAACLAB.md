@@ -34,7 +34,7 @@ Sim đóng gói sẵn; máy này cài bằng pip nên không có `python.sh` hay
 Mở Terminal (`Ctrl+Alt+T`), rồi:
 
 ```bash
-cd ~/Documents/projects/Transformer/Transform_bipedal_tovinh/Transform_bipedal/transformer_nam
+cd ~/Documents/projects/Transformer/Transform_bipedal_todai/isaac_rl
 ```
 
 ### Train ngầm (không hiện cửa sổ — tiết kiệm RAM và VRAM)
@@ -82,7 +82,7 @@ xem log) thì thêm `--headless`.
 
 ```bash
 source ~/miniconda3/etc/profile.d/conda.sh && conda activate isaacsim
-cd ~/Documents/projects/Transformer/Transform_bipedal_tovinh/Transform_bipedal/transformer_nam
+cd ~/Documents/projects/Transformer/Transform_bipedal_todai/isaac_rl
 tensorboard --logdir=logs/rsl_rl/transformer_walk --port=6006
 ```
 
@@ -155,7 +155,7 @@ optimizer trống. Cả hai tự hết sau khoảng 10 vòng. **Đừng tưởng
 
 ### Run nào play được với task nào
 
-Bảng đầy đủ 81 run nằm ở `transformer_nam/logs/README-runs.md`. Tóm tắt:
+Bảng đầy đủ 81 run nằm ở `isaac_rl/logs/README-runs.md`. Tóm tắt:
 
 | obs / act | Task | Số run | Checkpoint |
 |---|---|---|---|
@@ -347,7 +347,7 @@ Nếu Ubuntu hiện *"Isaac Lab is not responding"* lặp đi lặp lại, xem m
 ## 8. Những gì đã sửa trong code ngày 2026-08-03
 
 Sao lưu toàn bộ bản trước khi sửa ở
-`transformer_nam/.backup_truoc_khi_sua_20260803_010207/`.
+`isaac_rl/.backup_truoc_khi_sua_20260803_010207/`.
 
 | # | Lỗi | Sửa |
 |---|---|---|

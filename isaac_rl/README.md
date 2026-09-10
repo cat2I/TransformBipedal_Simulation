@@ -219,58 +219,29 @@ Transform_bipedal_todai/              # gốc repo
 | USD files missing on GitHub | Remove `**/*.usd` from `.gitignore` |
 | Feet slip on ground | Decrease `dynamic_friction` to 0.3-0.4 |
 
+## Development
+
+### IDE Setup (VSCode)
+1. Press `Ctrl+Shift+P` → `Tasks: Run Task` → `setup_python_env`
+2. Enter path to Isaac Sim installation
+3. Creates `.python.env` for indexing
+
+### Code Formatting
+```bash
+pip install pre-commit
+pre-commit run --all-files
+```
+
 ## References
 
 - [Isaac Lab Documentation](https://docs.omniverse.nvidia.com/isaaclab/)
 - [RSL-RL Repository](https://github.com/leggedrobotics/rsl_rl)
 - [IsaacSim](https://docs.omniverse.nvidia.com/isaacsim/)
 
----
+## License
 
-## Setup Notes — Ubuntu 24 / Isaac Sim 6.0.1 fork
+[Specify your license here]
 
-Nhánh này chạy trên **Ubuntu 24, Isaac Sim 6.0.1 + IsaacLab 3.0.0-beta2 + rsl-rl-lib 5.0.1**,
-cài bằng pip trong conda env `isaacsim` (Python 3.12). **Không có** `~/IsaacLab/isaac-sim/python.sh`
-như bản đóng gói sẵn ở trên — máy này dùng script `run.sh` riêng.
+## Authors
 
-Mọi lệnh chạy **từ `isaac_rl/`**, qua `./run.sh`. Không cần `conda activate` —
-`run.sh` tự bật env `isaacsim`, tự đặt `PYTHONPATH` và các biến môi trường cho GPU 6GB.
-
-```bash
-cd isaac_rl
-```
-
-**Train** (chạy ngầm cho nhanh, không cần `--num_envs`, mặc định đã là 4096):
-
-```bash
-./run.sh scripts/rsl_rl/train.py --task Transformer-Walk10DOF-Direct-v0 \
-    --headless --max_iterations 1500
-```
-
-**Play** — tự mở cửa sổ Isaac Sim, `--checkpoint` cần **đường dẫn đầy đủ**:
-
-```bash
-./run.sh scripts/rsl_rl/play.py --task Transformer-Walk10DOF-Direct-v0 --num_envs 1 \
-    --checkpoint "$PWD/logs/rsl_rl/transformer_walk/2026-07-23_15-23-03/model_1499_rslrl5.pt"
-```
-
-> Lần mở cửa sổ **đầu tiên** mất khoảng **2 phút** và trông như máy treo. Đừng tắt —
-> chờ tới khi terminal in dòng `[    0] roll=...`. Những lần sau chỉ còn **~23 giây**.
-> Thêm `--headless` (hoặc `--viz none`) nếu chỉ muốn xem log.
-
-**Task dùng được:**
-
-| Task | obs | act |
-|---|---|---|
-| `Transformer-Walk10DOF-Direct-v0` | 60 | 10 |
-| `Transformer-Walk10DOF6-Direct-v0` | 44 | 6 |
-
-Các task khác trong `source/transformer_nam/transformer_nam/tasks/direct/transformer_nam/__init__.py`
-đang comment out. Bảng đối chiếu 81 run cũ với task tương ứng: `isaac_rl/logs/README-runs.md`.
-
-**Tài liệu thêm:**
-
-| Cần gì | Xem ở đâu |
-|---|---|
-| Quy trình hằng ngày: sửa hàm thưởng → train → play, bảng tra lỗi | [`guidance.md`](guidance.md) |
-| Máy móc: phiên bản đã cài, tối ưu CPU/RAM/VRAM, số đo `num_envs` | [`CAI-DAT-ISAACLAB.md`](CAI-DAT-ISAACLAB.md) |
+- Transformer Bipedal Project Team

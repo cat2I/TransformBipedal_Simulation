@@ -627,7 +627,7 @@ Nếu đã đi được trong sim mà chưa sang thật được: randomize kh�
 ### Lệnh
 
 ```bash
-cd transformer_nam
+cd isaac_rl
 
 # Train
 ./run.sh scripts/rsl_rl/train.py --task Transformer-Walk10DOF-Direct-v0 \
@@ -688,7 +688,7 @@ sớm vào một dáng tệ. Tăng `entropy_coef`.
 | Env 10DOF | `.../tasks/direct/transformer_nam/transformer_walk10dof_env.py` |
 | Env 10DOF6 | `.../tasks/direct/transformer_nam/transformer_walk10dof6_env.py` |
 | Đăng ký task | `.../tasks/direct/transformer_nam/__init__.py` |
-| Script train | `transformer_nam/scripts/rsl_rl/train.py` |
+| Script train | `isaac_rl/scripts/rsl_rl/train.py` |
 | Thư viện rsl_rl | `~/miniconda3/envs/isaacsim/lib/python3.12/site-packages/rsl_rl/` |
 | Schema config IsaacLab | `~/IsaacLab/source/isaaclab_rl/isaaclab_rl/rsl_rl/rl_cfg.py` |
 | Mẫu ANYmal | `~/IsaacLab/source/isaaclab_tasks/isaaclab_tasks/manager_based/locomotion/velocity/config/anymal_d/agents/` |

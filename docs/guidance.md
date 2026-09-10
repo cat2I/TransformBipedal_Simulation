@@ -10,11 +10,11 @@ file này, không phải ở `~`.
 
 ## 0. Ba mươi giây để chạy
 
-**Luôn đứng ở `transformer_nam/` trước.** `run.sh` nằm trong đó, không phải gốc repo —
+**Luôn đứng ở `isaac_rl/` trước.** `run.sh` nằm trong đó, không phải gốc repo —
 đứng sai chỗ sẽ báo `bash: ./run.sh: No such file or directory`.
 
 ```bash
-cd ~/Documents/projects/Transformer/Transform_bipedal_tovinh/Transform_bipedal/transformer_nam
+cd ~/Documents/projects/Transformer/Transform_bipedal_todai/isaac_rl
 ```
 
 **Play — xem robot cử động trong cửa sổ Isaac Sim** (policy tốt nhất hiện có):
@@ -35,7 +35,7 @@ Không cần thêm cờ nào — cửa sổ tự mở, tốc độ tự đúng t
 
 **Không cần `conda activate`.** `run.sh` tự kích hoạt env `isaacsim`, tự đặt
 `PYTHONPATH`, tự đặt biến môi trường cho GPU 6GB, và tự dùng `isaac-run` nếu có.
-Mọi lệnh dưới đây đều chạy từ thư mục `transformer_nam`.
+Mọi lệnh dưới đây đều chạy từ thư mục `isaac_rl`.
 
 > **Khác nhau cơ bản giữa train và play:**
 > train luôn `--headless` (nhanh, tiết kiệm VRAM); play **không** truyền gì cả thì tự
@@ -143,7 +143,7 @@ python -m py_compile source/transformer_nam/transformer_nam/tasks/direct/transfo
 
 Soát lại thay đổi của mình bằng git (xem mục 5):
 ```bash
-cd .. && git diff --stat && cd transformer_nam
+cd .. && git diff --stat && cd isaac_rl
 ```
 
 ---
@@ -210,7 +210,7 @@ Mở **terminal thứ hai**:
 
 ```bash
 source ~/miniconda3/etc/profile.d/conda.sh && conda activate isaacsim
-cd ~/Documents/projects/Transformer/Transform_bipedal_tovinh/Transform_bipedal/transformer_nam
+cd ~/Documents/projects/Transformer/Transform_bipedal_todai/isaac_rl
 tensorboard --logdir=logs/rsl_rl/transformer_walk --port=6006
 ```
 
@@ -235,10 +235,10 @@ này.
 
 ### Bước 6 — Play thử
 
-Nhớ đứng ở `transformer_nam/` — `run.sh` nằm trong đó, không phải ở gốc repo.
+Nhớ đứng ở `isaac_rl/` — `run.sh` nằm trong đó, không phải ở gốc repo.
 
 ```bash
-cd ~/Documents/projects/Transformer/Transform_bipedal_tovinh/Transform_bipedal/transformer_nam
+cd ~/Documents/projects/Transformer/Transform_bipedal_todai/isaac_rl
 ./run.sh scripts/rsl_rl/play.py --task Transformer-Walk10DOF-Direct-v0 --num_envs 1 \
     --checkpoint "$PWD/logs/rsl_rl/transformer_walk/2026-07-23_15-23-03/model_1499_rslrl5.pt"
 ```
@@ -327,7 +327,7 @@ Hai file này là mạng đã đóng gói, không cần Isaac Sim để chạy.
 
 ## 2. Bảng lệnh tra nhanh
 
-Tất cả chạy từ `transformer_nam/`.
+Tất cả chạy từ `isaac_rl/`.
 
 | Việc | Lệnh |
 |---|---|
@@ -353,7 +353,7 @@ Mười một lỗi này đã gặp thật và đã sửa. Nếu gặp lại, tr
 
 | Thông báo lỗi | Nguyên nhân gốc | Xử lý |
 |---|---|---|
-| `bash: ./run.sh: No such file or directory` | Đang đứng ở gốc repo, mà `run.sh` nằm trong `transformer_nam/` | `cd transformer_nam` rồi chạy lại |
+| `bash: ./run.sh: No such file or directory` | Đang đứng ở gốc repo, mà `run.sh` nằm trong `isaac_rl/` | `cd isaac_rl` rồi chạy lại |
 | Chạy được, in log bình thường, **nhưng không mở cửa sổ** | IsaacLab 3.0 đảo mặc định: không có `--viz` là headless. Bỏ `--headless` không còn đủ nữa | Đã sửa trong `play.py` — nó tự thêm `--viz kit`. Script khác thì tự truyền cờ đó |
 | Cửa sổ hiện *"Isaac Lab is not responding"* lặp đi lặp lại | GNOME ping cửa sổ, quá `check-alive-timeout` (mặc định **5 giây**) là báo treo — mà Kit đứng lâu hơn thế liên tục lúc khởi động | `gsettings set org.gnome.mutter check-alive-timeout 0`<br>Hoàn tác: `gsettings reset org.gnome.mutter check-alive-timeout` |
 | Cửa sổ mở, log chạy đều, **nhưng khung 3D đen thui** (không thấy cả lưới sàn) | Đang chạy kèm `--rendering_mode performance`. Preset đó tắt quá nhiều tính năng RTX nên không dựng được gì | Bỏ cờ đó đi, để mặc định. Chi tiết ở `CAI-DAT-ISAACLAB.md` mục 10 |
@@ -473,7 +473,7 @@ sổ nào**.
 
 ## 5. Dùng git để soát lại
 
-Repo git nằm ở **`Transform_bipedal/`** — một cấp **trên** `transformer_nam/`.
+Repo git nằm ở **`Transform_bipedal_todai/`** — một cấp **trên** `isaac_rl/`.
 
 ```bash
 cd ~/Documents/projects/Transformer/Transform_bipedal_tovinh/Transform_bipedal
@@ -507,5 +507,5 @@ tuần sau nhìn lại còn hiểu.
 | Cần gì | Xem ở đâu |
 |---|---|
 | Cài đặt máy, tối ưu CPU/RAM/swap, số đo `num_envs` | `CAI-DAT-ISAACLAB.md` (gốc repo) |
-| Run nào chạy được với task nào (81 run) | `transformer_nam/logs/README-runs.md` |
-| Bản sao code trước khi sửa | `transformer_nam/.backup_truoc_khi_sua_20260803_010207/` |
+| Run nào chạy được với task nào (81 run) | `isaac_rl/logs/README-runs.md` |
+| Bản sao code trước khi sửa | `isaac_rl/.backup_truoc_khi_sua_20260803_010207/` |

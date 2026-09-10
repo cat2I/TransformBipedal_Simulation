@@ -10,7 +10,7 @@ Dưới đây là tài liệu phân tích sâu (deep dive) về cấu trúc thư
 
 ```text
 Transform_bipedal/
-├── transformer_nam/      # Thư mục cốt lõi chứa toàn bộ mã nguồn RL và môi trường Isaac Sim.
+├── isaac_rl/      # Thư mục cốt lõi chứa toàn bộ mã nguồn RL và môi trường Isaac Sim.
 ├── urdf/                 # Chứa các file mô hình URDF ban đầu của robot.
 ├── FullForm/             # Chứa mô hình robot dạng đầy đủ (USD & config).
 ├── 3DOFTrans/            # Chứa mô hình robot dạng 3 bậc tự do (3-DOF) mỗi chân.
@@ -24,7 +24,7 @@ Transform_bipedal/
 
 ---
 
-## 2. Phân tích Sâu Thư mục Cốt lõi: `transformer_nam/`
+## 2. Phân tích Sâu Thư mục Cốt lõi: `isaac_rl/`
 
 Đây là nơi chứa toàn bộ logic về môi trường mô phỏng, phần thưởng (reward function), cấu hình huấn luyện (training config) và các tập lệnh (scripts) để chạy mô hình.
 
