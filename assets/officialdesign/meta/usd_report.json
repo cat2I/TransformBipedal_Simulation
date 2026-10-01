@@ -1,0 +1,14 @@
+{
+  "mass_kg": 4.643000140786171,
+  "links": 13,
+  "dof": 10,
+  "collision": "Convex Decomposition",
+  "floating_base": true,
+  "principal_axes": "reconstructed from CSV tensor using Gf row-vector convention",
+  "sha256": {
+    "OFFICIALdesign/urdf/OFFICIALdesign.urdf": "dad0d12f599a7a249fc8b4498f46c24ffca76fe7c1c57d61779af8ab0923610f",
+    "meta/calibration.json": "7f25d11c53f59fd3cad37580a19bbdc71b7d8b2418bfb61163dc0504788dc75b",
+    "meta/build_report.json": "4a3fc6520a99148b1c2ffa23e29899965d6cd56b2a2ef358462882f81c1d0fba",
+    "usd/OFFICIALdesign.usd": "923b1e400b2d9a3f309c844a4b0811732de219858c68ce60b695e2d738223f82"
+  }
+}

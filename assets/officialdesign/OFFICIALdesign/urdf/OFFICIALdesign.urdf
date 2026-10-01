@@ -1,0 +1,371 @@
+<?xml version='1.0' encoding='utf-8'?>
+<robot name="OFFICIALdesign">
+  <link name="Baselink">
+    <inertial>
+      <origin xyz="0.006253583518719022 0.0051300964346658075 0.03225109361594866" rpy="0 0 0" />
+      <mass value="2.4416" />
+      <inertia ixx="0.02869224980753026" ixy="-0.0003861684662442347" ixz="8.807156168055321e-05" iyy="0.019721803484151874" iyz="0.00010764236869364565" izz="0.04495906469596811" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://OFFICIALdesign/meshes/Baselink.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://OFFICIALdesign/meshes/Baselink.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link name="IMUleft">
+    <inertial>
+      <origin xyz="0.00019367627740990434 5.815532999844941e-06 -0.0020684051628810656" rpy="0 0 0" />
+      <mass value="0.011" />
+      <inertia ixx="1.3096193644775145e-06" ixy="-7.408289105044513e-08" ixz="-4.076114495650085e-09" iyy="9.033503707567147e-07" iyz="-8.831470145451545e-11" izz="1.9299796840144327e-06" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://OFFICIALdesign/meshes/IMUleft.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.75294 0.75294 0.75294 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://OFFICIALdesign/meshes/IMUleft.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="IMUleft_joint" type="fixed">
+    <origin xyz="0 -0.0165 0.08675" rpy="0 0 0" />
+    <parent link="Baselink" />
+    <child link="IMUleft" />
+    <axis xyz="0 0 0" />
+  </joint>
+  <link name="IMUright">
+    <inertial>
+      <origin xyz="0.00019367627740984883 5.8155330001084625e-06 -0.0020684051628810656" rpy="0 0 0" />
+      <mass value="0.011" />
+      <inertia ixx="1.3096193644775145e-06" ixy="-7.408289105044485e-08" ixz="-4.076114495649519e-09" iyy="9.033503707567147e-07" iyz="-8.831470145367917e-11" izz="1.929979684014432e-06" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://OFFICIALdesign/meshes/IMUright.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.75294 0.75294 0.75294 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://OFFICIALdesign/meshes/IMUright.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="IMUright_joint" type="fixed">
+    <origin xyz="0 0.0165 0.08675" rpy="0 0 0" />
+    <parent link="Baselink" />
+    <child link="IMUright" />
+    <axis xyz="0 0 0" />
+  </joint>
+  <link name="Bubleft">
+    <inertial>
+      <origin xyz="-0.016953676389982325 -0.0007107525998303957 1.8178528765622204e-08" rpy="0 0 0" />
+      <mass value="0.0768" />
+      <inertia ixx="6.33998639604995e-05" ixy="-1.9394472852210742e-06" ixz="2.288074476592388e-11" iyy="3.222916034400358e-05" iyz="-1.959297243573071e-11" izz="7.305435648138445e-05" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://OFFICIALdesign/meshes/Bubleft.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://OFFICIALdesign/meshes/Bubleft.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Bubleft_joint" type="revolute">
+    <origin xyz="0.04025 -0.07995 0.0229" rpy="0 0 0" />
+    <parent link="Baselink" />
+    <child link="Bubleft" />
+    <axis xyz="-1 0 0" />
+    <limit lower="-0.20943951023931956" upper="0.20943951023931956" effort="10.3" velocity="4.7" />
+  </joint>
+  <link name="Hipleft">
+    <inertial>
+      <origin xyz="-0.0001561770959893333 0.0027605408885903494 -0.03302119498716018" rpy="0 0 0" />
+      <mass value="0.3424" />
+      <inertia ixx="0.00042339291548577267" ixy="1.1338212958733981e-07" ixz="4.662901246806921e-07" iyy="0.00035247997960850667" iyz="2.591870847828811e-05" izz="0.00012842851226399707" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://OFFICIALdesign/meshes/Hipleft.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://OFFICIALdesign/meshes/Hipleft.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Hipleft_joint" type="revolute">
+    <origin xyz="-0.04695 0.0003 0" rpy="0 0 0" />
+    <parent link="Bubleft" />
+    <child link="Hipleft" />
+    <axis xyz="0 -1 0" />
+    <limit lower="-0.2617993877991494" upper="0.7853981633974483" effort="10.3" velocity="4.7" />
+  </joint>
+  <link name="Rotate_left">
+    <inertial>
+      <origin xyz="-0.003972153893941484 -3.7180354295204745e-09 -0.03461813805673448" rpy="0 0 0" />
+      <mass value="0.10580000000000002" />
+      <inertia ixx="9.981524359561535e-05" ixy="3.0689180686312295e-11" ixz="3.5788847574487456e-06" iyy="0.00015018802609975668" iyz="-8.93585589619541e-12" izz="8.966829133185108e-05" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://OFFICIALdesign/meshes/Rotate_left.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://OFFICIALdesign/meshes/Rotate_left.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Nhat_rotate_left" type="revolute">
+    <origin xyz="0.0001 -0.0003 -0.0961" rpy="0 0 -1.5708" />
+    <parent link="Hipleft" />
+    <child link="Rotate_left" />
+    <axis xyz="0 0 -1" />
+    <limit lower="-0.2617993877991494" upper="0.2617993877991494" effort="2.94" velocity="4.7" />
+  </joint>
+  <link name="Kneeleft">
+    <inertial>
+      <origin xyz="-7.472288557298261e-05 0.0001202639431158926 -0.06552991144656278" rpy="0 0 0" />
+      <mass value="0.3481" />
+      <inertia ixx="0.001694645494308245" ixy="-2.0518916675629785e-08" ixz="-2.23447185662917e-06" iyy="0.0016204003807582113" iyz="-1.3516657109120808e-05" izz="0.0001413504585539261" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://OFFICIALdesign/meshes/Kneeleft.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://OFFICIALdesign/meshes/Kneeleft.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Kneeleft_joint" type="revolute">
+    <origin xyz="-0.0048 0 -0.089" rpy="0 0 1.5708" />
+    <parent link="Rotate_left" />
+    <child link="Kneeleft" />
+    <axis xyz="0 -1 0" />
+    <limit lower="-1.3089969389957472" upper="0.0" effort="10.3" velocity="4.7" />
+  </joint>
+  <link name="Footleft">
+    <inertial>
+      <origin xyz="0.04000650575461659 0.01828876396183221 -0.04174217071537087" rpy="0 0 0" />
+      <mass value="0.2166" />
+      <inertia ixx="0.000277403319370805" ixy="-5.669118354037732e-05" ixz="-2.3088483373330424e-07" iyy="0.0003871041254822294" iyz="6.608179737389756e-05" izz="0.0004790487938040547" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://OFFICIALdesign/meshes/Footleft.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://OFFICIALdesign/meshes/Footleft.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Footleft_joint" type="revolute">
+    <origin xyz="-0.00030248 0 -0.19" rpy="0 0 0" />
+    <parent link="Kneeleft" />
+    <child link="Footleft" />
+    <axis xyz="0 -1 0" />
+    <limit lower="-0.4363323129985824" upper="0.7853981633974483" effort="2.94" velocity="4.7" />
+  </joint>
+  <link name="Bubright">
+    <inertial>
+      <origin xyz="-0.016953676389982186 0.0007107525998306965 -1.817852909868911e-08" rpy="0 0 0" />
+      <mass value="0.0768" />
+      <inertia ixx="6.339986396049948e-05" ixy="1.9394472852210747e-06" ixz="-2.2880744766171786e-11" iyy="3.222916034400359e-05" iyz="-1.9592972440690637e-11" izz="7.305435648138447e-05" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://OFFICIALdesign/meshes/Bubright.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://OFFICIALdesign/meshes/Bubright.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Bubright_joint" type="revolute">
+    <origin xyz="0.04025 0.07995 0.0229" rpy="0 0 0" />
+    <parent link="Baselink" />
+    <child link="Bubright" />
+    <axis xyz="-1 0 0" />
+    <limit lower="-0.20943951023931956" upper="0.20943951023931956" effort="10.3" velocity="4.7" />
+  </joint>
+  <link name="Hipright">
+    <inertial>
+      <origin xyz="-0.0032225530257709027 -0.002682446790149423 -0.025177518870522345" rpy="0 0 0" />
+      <mass value="0.3424" />
+      <inertia ixx="0.00038867956344526365" ixy="2.4903127576806114e-06" ixz="1.905455555517156e-05" iyy="0.00033748515363628517" iyz="-3.1755119036946705e-05" izz="0.00014840760695488246" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://OFFICIALdesign/meshes/Hipright.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://OFFICIALdesign/meshes/Hipright.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Hipright_joint" type="revolute">
+    <origin xyz="-0.04695 -0.0003 0" rpy="0 0 0" />
+    <parent link="Bubright" />
+    <child link="Hipright" />
+    <axis xyz="0 1 0" />
+    <limit lower="-0.7853981633974483" upper="0.2617993877991494" effort="10.3" velocity="4.7" />
+  </joint>
+  <link name="Rotate_right">
+    <inertial>
+      <origin xyz="0.003972153893942516 3.7180356016186522e-09 -0.03461813805673574" rpy="0 0 0" />
+      <mass value="0.10580000000000002" />
+      <inertia ixx="9.98152435956153e-05" ixy="3.068918071374581e-11" ixz="-3.578884757448745e-06" iyy="0.00015018802609975668" iyz="8.935855894246315e-12" izz="8.966829133185111e-05" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://OFFICIALdesign/meshes/Rotate_right.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://OFFICIALdesign/meshes/Rotate_right.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="rotate_right" type="revolute">
+    <origin xyz="0.0001 0.0003 -0.0961" rpy="0 0 -1.5708" />
+    <parent link="Hipright" />
+    <child link="Rotate_right" />
+    <axis xyz="0 0 -1" />
+    <limit lower="-0.2617993877991494" upper="0.2617993877991494" effort="2.94" velocity="4.7" />
+  </joint>
+  <link name="Kneeright">
+    <inertial>
+      <origin xyz="7.472288557305851e-05 -0.00019948556596000036 -0.06552991144656402" rpy="0 0 0" />
+      <mass value="0.3481" />
+      <inertia ixx="0.0016945938630341742" ixy="-1.4306362667070344e-08" ixz="2.234471856633517e-06" iyy="0.0016204003807582113" iyz="1.0437173113836819e-05" izz="0.00014129882727985518" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://OFFICIALdesign/meshes/Kneeright.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://OFFICIALdesign/meshes/Kneeright.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Kneeright" type="revolute">
+    <origin xyz="0.0051 0 -0.089" rpy="0 0 1.5708" />
+    <parent link="Rotate_right" />
+    <child link="Kneeright" />
+    <axis xyz="0 1 0" />
+    <limit lower="0.0" upper="1.3089969389957472" effort="10.3" velocity="4.7" />
+  </joint>
+  <link name="Footright">
+    <inertial>
+      <origin xyz="0.04000650575461573 0.019507278849714677 -0.04163402220415788" rpy="0 0 0" />
+      <mass value="0.2166" />
+      <inertia ixx="0.0002866850670412217" ixy="-5.9614661690579054e-05" ixz="6.146298128678226e-08" iyy="0.0003877842529454059" iyz="6.991251570014511e-05" izz="0.0004876504140112953" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://OFFICIALdesign/meshes/Footright.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://OFFICIALdesign/meshes/Footright.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Footright_joint" type="revolute">
+    <origin xyz="0.00029752 0 -0.19" rpy="0 0 0" />
+    <parent link="Kneeright" />
+    <child link="Footright" />
+    <axis xyz="0 1 0" />
+    <limit lower="-0.7853981633974483" upper="0.4363323129985824" effort="2.94" velocity="4.7" />
+  </joint>
+</robot>

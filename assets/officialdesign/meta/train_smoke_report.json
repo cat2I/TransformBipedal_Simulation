@@ -1,0 +1,17 @@
+{
+  "task": "Transformer-Official-10DOF-Direct-v0",
+  "num_envs": 256,
+  "iterations": 2,
+  "total_steps": 12288,
+  "exit_code": 0,
+  "run": "isaac_rl/logs/rsl_rl/officialdesign_walk/2026-10-01_01-27-28_handoff_smoke",
+  "checkpoint": "isaac_rl/logs/rsl_rl/officialdesign_walk/2026-10-01_01-27-28_handoff_smoke/model_1.pt",
+  "offline_tests": "4 passed",
+  "physics_validation": "meta/validation_report.json",
+  "known_nonfatal_warnings": [
+    "Isaac Lab extension metadata/MaterialX",
+    "TGS external-forces iteration default",
+    "usdrt population initialization",
+    "Direct env IO descriptors unsupported"
+  ]
+}

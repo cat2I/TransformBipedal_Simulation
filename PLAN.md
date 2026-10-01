@@ -1,5 +1,34 @@
 # PLAN.md — Áp config đã đi bộ được (bản Isaac cũ) vào env chạy IsaacLab 3.0
 
+## Công việc mới — OFFICIALdesign handoff 2026-09-30 (2026-10-01)
+
+User yêu cầu tích hợp robot mới để train. Phạm vi đợt này độc lập với kế hoạch
+NewSimple bên dưới: thêm `assets/officialdesign/`, script chuẩn bị/kiểm thử,
+task `Transformer-Official-10DOF-Direct-v0`, đăng ký task và tài liệu chạy.
+Giữ các thay đổi có sẵn của user. Không sửa dữ liệu handoff gốc.
+
+- [x] Chuẩn bị URDF 13 link từ handoff: mass, CoM mm→m, tensor tại CoM;
+      kiểm tra tensor vật lý và tổng 4.643 kg, mesh và cây 10 DOF.
+- [x] Lưu mapping theo tên joint thật, dấu hai chân, giới hạn train tạm có
+      nguồn rõ ràng; không gọi chúng là giới hạn cơ khí đã đo.
+- [x] Import USD floating base, giữ IMU, collision convex, kiểm tra mass USD.
+- [x] Task mới: actuator heavy/light riêng, reset sạch, lệnh theo tên khớp,
+      IMU không nhân đôi, pose/chiều cao theo hình học robot mới, PPO riêng.
+- [x] Chạy kiểm tra hướng khớp, reset, số hữu hạn, giới hạn torque/position,
+      đứng giữ pose/thả rơi và train PPO ngắn trên GPU.
+- [x] Ghi lệnh train/play và các mục CAD/phần cứng còn chưa xác nhận.
+
+Giới hạn nghiệm thu: chạy được train không đồng nghĩa policy đã biết đi hay
+thông số đã đủ để triển khai robot thật. Hip/Foot CoM và script SolidWorks
+vẫn chờ kiểm tra phía CAD theo handoff.
+
+Kết quả: offline 4/4; GPU validation 8 env pass (giữ pose 5 s, contact,
+reset, torque, thả rơi); PPO 256 env × 2 iterations = 12,288 steps, exit 0.
+Báo cáo: `assets/officialdesign/meta/validation_report.json` và
+`assets/officialdesign/meta/train_smoke_report.json`.
+
+---
+
 Người lập: Claude (Tech Lead). Người thực thi: agy (Gemini). Ngày: 2026-09-10.
 
 ## Nguồn sự thật

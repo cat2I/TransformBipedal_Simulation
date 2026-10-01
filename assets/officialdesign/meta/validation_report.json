@@ -1,0 +1,75 @@
+{
+  "status": "passed",
+  "num_envs": 8,
+  "mass_kg": [
+    4.64300012588501,
+    4.64300012588501,
+    4.64300012588501,
+    4.64300012588501,
+    4.64300012588501,
+    4.64300012588501,
+    4.64300012588501,
+    4.64300012588501
+  ],
+  "observation_dim": 60,
+  "action_dim": 10,
+  "joint_order": [
+    "Bubleft_joint",
+    "Bubright_joint",
+    "Hipleft_joint",
+    "Hipright_joint",
+    "Nhat_rotate_left",
+    "rotate_right",
+    "Kneeleft_joint",
+    "Kneeright",
+    "Footleft_joint",
+    "Footright_joint"
+  ],
+  "isaac_joint_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "stance_seconds": 5,
+  "stance_min_base_height_m": 0.3729393780231476,
+  "stance_final_height_m": [
+    0.37477898597717285,
+    0.37399378418922424,
+    0.37337255477905273,
+    0.37351903319358826,
+    0.373470664024353,
+    0.37346377968788147,
+    0.37344080209732056,
+    0.3733556866645813
+  ],
+  "stance_final_vertical_contact_N": [
+    43.16886520385742,
+    43.133052825927734,
+    54.42466735839844,
+    51.092857360839844,
+    49.3079833984375,
+    34.726722717285156,
+    37.30908203125,
+    57.455055236816406
+  ],
+  "peak_contact_component_N": 66.11206817626953,
+  "random_action_resets": 31,
+  "checks": [
+    "mass",
+    "joint_mapping",
+    "effort_velocity_limits",
+    "stance_no_reset",
+    "foot_contact_weight",
+    "finite_rollout",
+    "bounded_actions_torques",
+    "partial_reset",
+    "floating_base_drop"
+  ]
+}

@@ -11,6 +11,7 @@ mục 'Angular Drive' trong bảng Property với:
 Cách dùng:
     python isaacsim_inspect.py Fulltrans_meshfixed   # mở GUI, base gắn cứng
     python isaacsim_inspect.py --list                 # liệt kê model
+    python isaacsim_inspect.py OFFICIALdesign         # robot mới, chỉnh khớp
 
 Hướng dẫn sau khi GUI mở:
     1. Bảng Stage (phải): click chọn một khớp (joint)
@@ -24,18 +25,7 @@ import argparse
 import os
 import sys
 
-ROOT = os.path.dirname(os.path.abspath(__file__))
-
-
-def find_models():
-    """Tìm mọi file .urdf trong repo, trả về dict {tên: đường_dẫn}."""
-    models = {}
-    for dirpath, dirnames, filenames in os.walk(ROOT):
-        dirnames[:] = [d for d in dirnames if not d.startswith(".")]
-        for fn in filenames:
-            if fn.endswith(".urdf"):
-                models[os.path.splitext(fn)[0]] = os.path.join(dirpath, fn)
-    return dict(sorted(models.items()))
+from isaacsim_view import ROOT, find_models, find_ros_packages, prepared_usd, finish_fixed_root
 
 
 def main():
@@ -44,6 +34,7 @@ def main():
     )
     ap.add_argument("model", nargs="?", help="tên model (không cần đuôi .urdf)")
     ap.add_argument("--list", action="store_true", help="liệt kê model có sẵn")
+    ap.add_argument("--steps", type=int, default=0, help="chạy N bước physics rồi thoát; 0 = chỉnh tay")
     args_partial, _ = ap.parse_known_args()
 
     models = find_models()
@@ -59,13 +50,14 @@ def main():
             f"Không có model '{args_partial.model}'. Có: {', '.join(models)}"
         )
     urdf_path = models[args_partial.model]
+    usd_path = prepared_usd(args_partial.model)
 
     # ── Boot Isaac Sim với GUI ───────────────────────────────────────────
     from isaaclab.app import AppLauncher
 
     AppLauncher.add_app_launcher_args(ap)
     # Ép mở giao diện nếu người dùng không chỉ định
-    if not any(arg in sys.argv for arg in ["--headless", "--viz", "--visualizer"]):
+    if not any(arg.split("=", 1)[0] in ("--headless", "--viz", "--visualizer") for arg in sys.argv):
         sys.argv.extend(["--viz", "kit"])
     args_cli = ap.parse_args()
 
@@ -73,23 +65,26 @@ def main():
     simulation_app = app_launcher.app
 
     # ── Import URDF bằng API gốc của Isaac Sim 6.x ──────────────────────
-    from isaacsim.asset.importer.urdf import URDFImporter, URDFImporterConfig
+    if usd_path is None:
+        import omni.kit.app
 
-    import_config = URDFImporterConfig(
-        urdf_path=urdf_path,
-        fix_base=True,                        # gắn cứng base link
-        merge_fixed_joints=False,              # giữ nguyên tất cả link
-        joint_drive_type="force",              # force drive
-        joint_target_type="position",          # position target
-        override_joint_stiffness=10000.0,      # stiffness cho tất cả khớp
-        override_joint_damping=500.0,          # damping cho tất cả khớp
-    )
+        manager = omni.kit.app.get_app().get_extension_manager()
+        manager.set_extension_enabled_immediate("isaacsim.asset.importer.urdf", True)
+        from isaacsim.asset.importer.urdf import URDFImporter, URDFImporterConfig
 
-    importer = URDFImporter(import_config)
-
-    print(f"\n  Đang import: {os.path.relpath(urdf_path, ROOT)}")
-    usd_path = importer.import_urdf()
-    print(f"  → File USD tạm: {usd_path}")
+        import_config = URDFImporterConfig(
+            urdf_path=urdf_path,
+            fix_base=True,
+            merge_fixed_joints=False,
+            ros_package_paths=find_ros_packages(urdf_path),
+            joint_drive_type="force",
+            joint_target_type="position",
+            override_joint_stiffness=10000.0,
+            override_joint_damping=500.0,
+        )
+        print(f"\n  Đang import: {os.path.relpath(urdf_path, ROOT)}", flush=True)
+        usd_path = URDFImporter(import_config).import_urdf()
+    print(f"  → Mở USD: {usd_path}", flush=True)
 
     # ── Nạp USD lên stage hiện tại ──────────────────────────────────────
     import omni.usd
@@ -98,9 +93,7 @@ def main():
     stage_context = omni.usd.get_context()
 
     # Thêm robot lên stage đang mở bằng cách reference file USD vừa tạo
-    stage = stage_context.get_stage()
-
-    from pxr import UsdGeom
+    from pxr import Usd, UsdGeom, UsdPhysics
 
     # Tạo SimulationContext: đây là cơ chế chuẩn của IsaacLab để gắn stage
     # hiện tại của Kit vào "current stage" nội bộ của IsaacLab (thread-local).
@@ -117,7 +110,8 @@ def main():
     # to call this method if PxSceneFlag::eENABLE_DIRECT_GPU_API is enabled!".
     # Script này dùng để kéo-thả khớp bằng tay nên cần CPU để đường ghi giá
     # trị "thường" (không qua GPU) hoạt động.
-    sim_utils.SimulationContext(sim_utils.SimulationCfg(device="cpu"))
+    sim = sim_utils.SimulationContext(sim_utils.SimulationCfg(device="cpu"))
+    stage = stage_context.get_stage()
 
     # Thêm robot reference
     robot_prim = stage.DefinePrim("/World/Robot", "Xform")
@@ -127,11 +121,26 @@ def main():
     xform = UsdGeom.Xformable(robot_prim)
     xform.AddTranslateOp().Set((0.0, 0.0, 0.5))
 
+    # Chỉ override trên stage xem tạm; không ghi vào USD dùng train.
+    if args_cli.model == "OFFICIALdesign":
+        sim_utils.modify_articulation_root_properties(
+            "/World/Robot", sim_utils.ArticulationRootPropertiesCfg(fix_root_link=True), stage=stage)
+        finish_fixed_root(stage)
+        for prim in Usd.PrimRange(robot_prim):
+            if prim.IsA(UsdPhysics.RevoluteJoint):
+                drive = UsdPhysics.DriveAPI.Apply(prim, "angular")
+                drive.CreateTypeAttr("force")
+                drive.CreateStiffnessAttr(10000.0)
+                drive.CreateDampingAttr(500.0)
+                drive.CreateTargetPositionAttr(0.0)
+        print("  Drive phục vụ inspect; đây không phải controller của task train.", flush=True)
+
     # Sàn + đèn
     ground_cfg = sim_utils.GroundPlaneCfg()
     ground_cfg.func("/World/defaultGroundPlane", ground_cfg)
     light_cfg = sim_utils.DomeLightCfg(intensity=3000.0, color=(0.75, 0.75, 0.75))
     light_cfg.func("/World/Light", light_cfg)
+    sim.set_camera_view([1.0, -1.0, 0.8], [0.0, 0.0, 0.3])
 
     # ── In hướng dẫn ────────────────────────────────────────────────────
     print("\n" + "=" * 60)
@@ -147,8 +156,14 @@ def main():
 
     # ── Vòng lặp GUI ────────────────────────────────────────────────────
     # KHÔNG tự bước physics — để người dùng tự nhấn Play/Stop trong GUI
-    while simulation_app.is_running():
-        simulation_app.update()
+    if args_cli.steps > 0:
+        sim.reset()
+        for _ in range(args_cli.steps):
+            sim.step()
+        print(f"[INFO]: Inspect smoke test: {args_cli.steps} bước hoàn tất.", flush=True)
+    else:
+        while simulation_app.is_running():
+            simulation_app.update()
 
     simulation_app.close()
 

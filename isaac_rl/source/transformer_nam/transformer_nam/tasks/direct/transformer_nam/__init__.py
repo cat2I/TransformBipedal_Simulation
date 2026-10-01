@@ -7,6 +7,16 @@ import gymnasium as gym
 
 from . import agents
 
+gym.register(
+    id="Transformer-Official-10DOF-Direct-v0",
+    entry_point=f"{__name__}.official_env:OfficialWalkEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.official_env:OfficialWalkEnvCfg",
+        "rsl_rl_cfg_entry_point": f"{agents.__name__}.official_ppo_cfg:OfficialWalkPPORunnerCfg",
+    },
+)
+
 ##
 # Register Gym environments.
 ##

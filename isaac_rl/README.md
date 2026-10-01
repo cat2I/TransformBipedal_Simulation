@@ -1,5 +1,10 @@
 # Transformer Bipedal Walking - Isaac Lab RL Training
 
+Robot mới từ handoff **2026-09-30** dùng task
+`Transformer-Official-10DOF-Direct-v0`. Xem [cấu hình, mapping và lệnh
+train/test OFFICIALdesign](../assets/officialdesign/README.md).
+Các phần dưới đây mô tả các task robot trước đó.
+
 Reinforcement learning environment for training a bipedal robot (Transformer) using Isaac Lab with 6 DOF locomotion control.
 
 ## Demo

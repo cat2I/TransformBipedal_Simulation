@@ -1,0 +1,118 @@
+{
+  "source": "SIM_HANDOFF.md 2026-09-30",
+  "calibration_status": "simulation_provisional",
+  "notes": [
+    "CAD left is robot right (negative Baselink y). Names preserved.",
+    "q_urdf_deg = sign * q_policy_deg. Zero offset = CAD zero.",
+    "Angle ranges are conservative training envelopes, NOT measured hardware stops.",
+    "Torque values are stall estimates from handoff; velocity 4.7 rad/s provisional.",
+    "PD gains and armature are simulation tuning values, not hardware measurements.",
+    "TODO: verify Hip/Foot CoM and inertia script in SolidWorks; measure servo zero, stops, operating voltage, torque-speed curve."
+  ],
+  "actuators": {
+    "heavy": {
+      "servo": "STS3095",
+      "effort": 10.3,
+      "velocity": 4.7,
+      "stiffness": 60.0,
+      "damping": 1.5,
+      "armature": 0.01
+    },
+    "light": {
+      "servo": "STS3215",
+      "effort": 2.94,
+      "velocity": 4.7,
+      "stiffness": 40.0,
+      "damping": 1.0,
+      "armature": 0.01
+    }
+  },
+  "ground": {
+    "static_friction": 0.8,
+    "dynamic_friction": 0.4,
+    "restitution": 0.0
+  },
+  "spawn_clearance_m": 0.005,
+  "joints": [
+    {
+      "name": "Bubleft_joint",
+      "group": "heavy",
+      "sign": 1,
+      "policy_min_deg": -12,
+      "policy_max_deg": 12,
+      "policy_default_deg": 0
+    },
+    {
+      "name": "Bubright_joint",
+      "group": "heavy",
+      "sign": -1,
+      "policy_min_deg": -12,
+      "policy_max_deg": 12,
+      "policy_default_deg": 0
+    },
+    {
+      "name": "Hipleft_joint",
+      "group": "heavy",
+      "sign": 1,
+      "policy_min_deg": -15,
+      "policy_max_deg": 45,
+      "policy_default_deg": 20
+    },
+    {
+      "name": "Hipright_joint",
+      "group": "heavy",
+      "sign": -1,
+      "policy_min_deg": -15,
+      "policy_max_deg": 45,
+      "policy_default_deg": 20
+    },
+    {
+      "name": "Nhat_rotate_left",
+      "group": "light",
+      "sign": 1,
+      "policy_min_deg": -15,
+      "policy_max_deg": 15,
+      "policy_default_deg": 0
+    },
+    {
+      "name": "rotate_right",
+      "group": "light",
+      "sign": 1,
+      "policy_min_deg": -15,
+      "policy_max_deg": 15,
+      "policy_default_deg": 0
+    },
+    {
+      "name": "Kneeleft_joint",
+      "group": "heavy",
+      "sign": 1,
+      "policy_min_deg": -75,
+      "policy_max_deg": 0,
+      "policy_default_deg": -40
+    },
+    {
+      "name": "Kneeright",
+      "group": "heavy",
+      "sign": -1,
+      "policy_min_deg": -75,
+      "policy_max_deg": 0,
+      "policy_default_deg": -40
+    },
+    {
+      "name": "Footleft_joint",
+      "group": "light",
+      "sign": 1,
+      "policy_min_deg": -25,
+      "policy_max_deg": 45,
+      "policy_default_deg": 20
+    },
+    {
+      "name": "Footright_joint",
+      "group": "light",
+      "sign": -1,
+      "policy_min_deg": -25,
+      "policy_max_deg": 45,
+      "policy_default_deg": 20
+    }
+  ]
+}

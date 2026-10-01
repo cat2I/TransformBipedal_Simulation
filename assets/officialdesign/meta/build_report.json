@@ -1,0 +1,45 @@
+{
+  "mass_kg": 4.643,
+  "zero_com_in_base_m": [
+    0.004649026888829958,
+    0.004424326220543245,
+    -0.05860711180573469
+  ],
+  "spawn_height_m": 0.37964746561430107,
+  "feet": {
+    "Footleft": {
+      "sole_z_local_m": -0.04500120133161545,
+      "default_origin_in_base_m": [
+        -0.008566151096070597,
+        -0.07515000000003237,
+        -0.3294410397592199
+      ]
+    },
+    "Footright": {
+      "sole_z_local_m": -0.04500120133161545,
+      "default_origin_in_base_m": [
+        -0.008002369695267991,
+        0.0748500000000344,
+        -0.3296462642826856
+      ]
+    }
+  },
+  "source_sha256": {
+    "sim_handoff /OFFICIALdesign/urdf/OFFICIALdesign.urdf": "a1aae80868651c34cf7c521de08eed1a1210df0f3943b2294cf3717d81b68602",
+    "sim_handoff /inertial_report.csv": "d53b977743f1e82ba3ab2ff57263acf1ec9e5524133612e7485aba3fc634ef22",
+    "assets/officialdesign/meta/calibration.json": "7f25d11c53f59fd3cad37580a19bbdc71b7d8b2418bfb61163dc0504788dc75b",
+    "assets/officialdesign/OFFICIALdesign/meshes/Baselink.STL": "285d517bca2cc024585de33b321841701528ad7c365ec7a3485a9ebc84d6f39b",
+    "assets/officialdesign/OFFICIALdesign/meshes/Bubleft.STL": "ac44ec4abd8924396ebb1cad84b3c3499fb431c0345178ec69ed25b9ec02550c",
+    "assets/officialdesign/OFFICIALdesign/meshes/Bubright.STL": "31786394f35672e2f72e3b8cd74abad3bf018e0ad8360a31c0adaa1b8a582fd1",
+    "assets/officialdesign/OFFICIALdesign/meshes/Footleft.STL": "69cdce14e72bd87aabe47576a12e5d69c418a4a4005109a06dc9f62babb7248d",
+    "assets/officialdesign/OFFICIALdesign/meshes/Footright.STL": "5289588cafde64b19ce1a5b7c339040b684eeabb5ca26e328b6b227c04da4373",
+    "assets/officialdesign/OFFICIALdesign/meshes/Hipleft.STL": "320cb164da6bed807d5ab979e1eea82135e1625e78ad1d025428d51212254c6a",
+    "assets/officialdesign/OFFICIALdesign/meshes/Hipright.STL": "1f9f947217adb3c893d90b5194cff2a57998b2a5aa7e35ca415e41e6f2a9842f",
+    "assets/officialdesign/OFFICIALdesign/meshes/IMUleft.STL": "bceaf84ea8156b717d254019195fb632dffff70d400b8e5161e1e64919b236c5",
+    "assets/officialdesign/OFFICIALdesign/meshes/IMUright.STL": "999038e4f29bc3aa56d11a85bd128dd4a23e2358ab5065c5356f7d8c08991389",
+    "assets/officialdesign/OFFICIALdesign/meshes/Kneeleft.STL": "d03bd98e554f2bb6b274a68c3c3b4cb9dd9c71605d4e4e24fb98cd502e7f9356",
+    "assets/officialdesign/OFFICIALdesign/meshes/Kneeright.STL": "bb67c91794669a43cbe03bc95a3f51da32463a2fff3a5d3f7a10ce0642a80499",
+    "assets/officialdesign/OFFICIALdesign/meshes/Rotate_left.STL": "4656e459ba6f89fc393b6e0ec8a878402184b2f43e5319067afb6442b0dfb889",
+    "assets/officialdesign/OFFICIALdesign/meshes/Rotate_right.STL": "5e3c3c09b2cd043a92a17da0aa67d25518951704b5a002fe96327ecfb98e38ae"
+  }
+}
