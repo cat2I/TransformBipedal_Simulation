@@ -99,79 +99,79 @@ import isaaclab.sim as sim_utils
 
 from ._asset_paths import asset_path
  
-TRANSFORMER_USD = asset_path("FullForm111.usd")
-TRANSFORMER_CFG = ArticulationCfg(
-    prim_path="{ENV_REGEX_NS}/Robot",
-    spawn=sim_utils.UsdFileCfg(
-        usd_path=TRANSFORMER_USD,
-        activate_contact_sensors=True,
-        rigid_props=sim_utils.RigidBodyPropertiesCfg(
-            disable_gravity=False,
-            enable_gyroscopic_forces=True,
-            retain_accelerations=False,
-            linear_damping=0.1,
-            angular_damping=0.1,
-            max_linear_velocity=1000.0,
-            max_angular_velocity=1000.0,
-            max_depenetration_velocity=1.0,
-        ),
-        articulation_props=sim_utils.ArticulationRootPropertiesCfg(
-            enabled_self_collisions=True,
-            solver_position_iteration_count=12,
-            solver_velocity_iteration_count=8,
-            sleep_threshold=0.005,
-            stabilization_threshold=0.001,
-        ),
-    ),
-    init_state=ArticulationCfg.InitialStateCfg(
-        pos=(0.0, 0.0, 0.10),   # sát đất — robot nằm ngang
-        joint_pos={
-            # ── POSE XOẠC (nằm như con ếch) ──────────────────
-            # Bubleft  axis=(-1,0,0): âm = dạng sang trái
-            "Bubleft_joint":   math.radians(90.0),    # [0] dạng sang trái
-            # Bubright axis=(+1,0,0): dương = dạng sang phải
-            "Bubright_joint":  math.radians(90.0),    # [1] dạng sang phải
-            # Tất cả còn lại = 0
-            "Hipleft_joint":   0.0,
-            "Hipright_joint":  0.0,
-            "Kneeleft_joint":  0.0,
-            "Kneeright_joint": 0.0,
-            "Footleft_joint":  0.0,
-            "Footright_joint": 0.0,
-        },
-        joint_vel={".*": 0.0},
-    ),
-    actuators={
-        # Bub + Hip + Knee — STS3095
-        "heavy_joints": DCMotorCfg(
-            joint_names_expr=[
-                "Bubleft_joint", "Bubright_joint",
-                "Hipleft_joint", "Hipright_joint",
-                "Kneeleft_joint", "Kneeright_joint",
-            ],
-            effort_limit=80,
-            effort_limit_sim=80,
-            saturation_effort=80,
-            velocity_limit=2.7,
-            velocity_limit_sim=2.7,
-            armature=0.08,
-            stiffness=200.0,
-            damping=5.0,
-        ),
-        # Foot — STS3125
-        "light_joints": DCMotorCfg(
-            joint_names_expr=["Footleft_joint", "Footright_joint"],
-            stiffness=120.0,
-            damping=3.0,
-            armature=0.08,
-            saturation_effort=40,
-            effort_limit=40,
-            effort_limit_sim=40,
-            velocity_limit=2.7,
-            velocity_limit_sim=2.7,
-        ),
-    },
-)
+# TRANSFORMER_USD = asset_path("FullForm111.usd")
+# TRANSFORMER_CFG = ArticulationCfg(
+#     prim_path="{ENV_REGEX_NS}/Robot",
+#     spawn=sim_utils.UsdFileCfg(
+#         usd_path=TRANSFORMER_USD,
+#         activate_contact_sensors=True,
+#         rigid_props=sim_utils.RigidBodyPropertiesCfg(
+#             disable_gravity=False,
+#             enable_gyroscopic_forces=True,
+#             retain_accelerations=False,
+#             linear_damping=0.1,
+#             angular_damping=0.1,
+#             max_linear_velocity=1000.0,
+#             max_angular_velocity=1000.0,
+#             max_depenetration_velocity=1.0,
+#         ),
+#         articulation_props=sim_utils.ArticulationRootPropertiesCfg(
+#             enabled_self_collisions=True,
+#             solver_position_iteration_count=12,
+#             solver_velocity_iteration_count=8,
+#             sleep_threshold=0.005,
+#             stabilization_threshold=0.001,
+#         ),
+#     ),
+#     init_state=ArticulationCfg.InitialStateCfg(
+#         pos=(0.0, 0.0, 0.10),   # sát đất — robot nằm ngang
+#         joint_pos={
+#             # ── POSE XOẠC (nằm như con ếch) ──────────────────
+#             # Bubleft  axis=(-1,0,0): âm = dạng sang trái
+#             "Bubleft_joint":   math.radians(90.0),    # [0] dạng sang trái
+#             # Bubright axis=(+1,0,0): dương = dạng sang phải
+#             "Bubright_joint":  math.radians(90.0),    # [1] dạng sang phải
+#             # Tất cả còn lại = 0
+#             "Hipleft_joint":   0.0,
+#             "Hipright_joint":  0.0,
+#             "Kneeleft_joint":  0.0,
+#             "Kneeright_joint": 0.0,
+#             "Footleft_joint":  0.0,
+#             "Footright_joint": 0.0,
+#         },
+#         joint_vel={".*": 0.0},
+#     ),
+#     actuators={
+#         # Bub + Hip + Knee — STS3095
+#         "heavy_joints": DCMotorCfg(
+#             joint_names_expr=[
+#                 "Bubleft_joint", "Bubright_joint",
+#                 "Hipleft_joint", "Hipright_joint",
+#                 "Kneeleft_joint", "Kneeright_joint",
+#             ],
+#             effort_limit=80,
+#             effort_limit_sim=80,
+#             saturation_effort=80,
+#             velocity_limit=2.7,
+#             velocity_limit_sim=2.7,
+#             armature=0.08,
+#             stiffness=200.0,
+#             damping=5.0,
+#         ),
+#         # Foot — STS3125
+#         "light_joints": DCMotorCfg(
+#             joint_names_expr=["Footleft_joint", "Footright_joint"],
+#             stiffness=120.0,
+#             damping=3.0,
+#             armature=0.08,
+#             saturation_effort=40,
+#             effort_limit=40,
+#             effort_limit_sim=40,
+#             velocity_limit=2.7,
+#             velocity_limit_sim=2.7,
+#         ),
+#     },
+# )
 # """
 # transformer_config_10dof.py
 # ===========================

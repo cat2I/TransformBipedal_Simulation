@@ -15,16 +15,9 @@ from isaaclab.sim.spawners import RigidBodyMaterialCfg
 from isaaclab.sim.utils import bind_physics_material
 from random import uniform
 
-# transformer_config.py định nghĩa TRANSFORMER_CFG HAI LẦN: dòng 10 (NewSimple,
-# 6 khớp) rồi dòng 103 ghi đè bằng FullForm111 (8 khớp). Python giữ cái sau, nên
-# import từ đó làm env 6 khớp này nhận robot 8 khớp và chết ngay lúc reset:
-#     AssertionError: 'joint_friction_coeff' Shape mismatch: [1, 6] != (1, 8)
-#
-# transformer_config_3dof.py mới là config model_349.pt đã train (tên "3dof" =
-# 3 khớp MỖI CHÂN). Đối chiếu params/env.yaml của run 2026-03-19_13-18-11_work:
-# Hip 0.4363 rad = 25°, Knee -0.8727 = -50°, Foot 25°, đúng 6 khớp, NewSimple.usd
-# — khớp từng số với file này.
-from .transformer_config_3dof import TRANSFORMER_CFG
+# TRANSFORMER_CFG = NewSimple.usd, 6 khớp, pose Hip 25° / Knee -50° / Foot 25°. Giống REF từng số.
+# Khối FullForm111 (8 khớp) trong transformer_config.py đã comment — KHÔNG mở lại (lệch shape [1,6] != [1,8]).
+from .transformer_config import TRANSFORMER_CFG
 
 from ._lab3_compat import as_torch, imu_quat_w
 
@@ -63,8 +56,9 @@ class TransformerWalkEnvCfg(DirectRLEnvCfg):
     
     obj = "walk"
     
+    # [orientation, height, joint_position, sigmoid_extra, feet_height, velocity, deviation] — theo REF 2026-07-30
     weights = {
-        "walk": [1, 1, 1, 0, 2, 1.2, 1],
+        "walk": [1, 1, 0.2, 0, 2, 6, 1],
     }
     
     actuator_delay_max = 6
@@ -105,7 +99,7 @@ class TransformerWalkEnvCfg(DirectRLEnvCfg):
         update_period=0.012,
     )
 
-    domain_rand: bool = True
+    domain_rand: bool = False
 
     imu_bias_range: dict = {
         "roll":  [-0.10, 0.15],         # Real range: ±0.1 rad
@@ -113,25 +107,25 @@ class TransformerWalkEnvCfg(DirectRLEnvCfg):
         "yaw":   [-0.03, 0.03],
     }
 
-    # ✅ FIX: Giảm orientation noise (hiện tại quá nhỏ so với real)
+    # mặc định = REF (đã đi bộ được). Muốn tăng: env.imu_noise_std.orientation=0.04 trên dòng lệnh
     imu_noise_std: dict = {
-        "orientation": 0.04,            # Tăng từ 0.015 → match real std
-        "angular_velocity": 0.15,       # Tăng từ 0.038 → match real GX std (0.3)
+        "orientation": 0.015,
+        "angular_velocity": 0.01,
     }
 
-    imu_drift_rate: float = 0.0001
+    imu_drift_rate: float = 0.0
 
     # Bias IMU cố định dùng khi domain_rand=False. Trước đây hard-code trong
     # _get_observations nên không override được từ dòng lệnh — mà đó chính là
     # thứ cần tắt khi muốn phát lại một checkpoint cũ đúng điều kiện lúc train.
     # Giá trị mặc định giữ nguyên như cũ, không đổi hành vi.
-    imu_fixed_bias: tuple = (0.0, -0.193, 0.0)
+    imu_fixed_bias: tuple = (0.0, 0.0, 0.0)
 
     # Hằng số của ROBOT, theo thứ tự [Hip_L, Hip_R, Knee_L, Knee_R, Ankle_L, Ankle_R].
     # Mặc định là số của NewSimple.usd. Robot khác trục khớp thì override từ dòng lệnh
     # (SimpleTrans.usd đảo dấu cả ba: start_pos [-25,-25,50,50,-25,-25]).
-    servo_max: tuple = (30, 30, -45, -45, 30, 30)
-    servo_min: tuple = (20, 20, -55, -55, 20, 20)
+    servo_max: tuple = (35, 35, -40, -40, 35, 35)
+    servo_min: tuple = (15, 15, -70, -70, 15, 15)
     start_pos: tuple = (25, 25, -50, -50, 25, 25)
 
 class TransformerWalkEnv(DirectRLEnv):
@@ -237,8 +231,8 @@ class TransformerWalkEnv(DirectRLEnv):
 
         from isaaclab.sim.spawners.from_files import GroundPlaneCfg, spawn_ground_plane
         ground_cfg = RigidBodyMaterialCfg(
-            static_friction=2.0,
-            dynamic_friction=2.5,
+            static_friction=0.8,
+            dynamic_friction=0.4,
             restitution=0.05,
             friction_combine_mode="average",
         )
@@ -261,19 +255,7 @@ class TransformerWalkEnv(DirectRLEnv):
             orient = orient_raw + fixed_bias
 
         # 2. Áp dụng noise Gaussian (giống thực tế)
-        #
-        # SỬA 2026-09-10 — trước đây khối này NHÂN ĐÔI tín hiệu IMU:
-        #     orient_noise = gaussian_noise(orient, cfg)   # gaussian_noise TRẢ VỀ orient + nhiễu
-        #     orient += orient_noise                       # -> orient = 2*orient + nhiễu
-        # GaussianNoiseCfg.operation mặc định là "add", và noise_model.gaussian_noise
-        # trả về `data + mean + std*randn` chứ KHÔNG trả về riêng phần nhiễu. Cộng
-        # thêm lần nữa là nhân đôi. Cả roll/pitch lẫn gyro đều bị.
-        #
-        # Hậu quả đo được: pitch chạm trần ±1 rad suốt 41% thời gian, gz chạm
-        # ±2 rad/s 30% thời gian -> policy mù đúng lúc cần cứu thăng bằng, và mọi
-        # checkpoint train trước khi bug xuất hiện đều ngã sau vài bước.
-        #
-        # Bản tháng 3 (commit 1752c9a) viết đúng: `orient = gaussian_noise(orient, cfg)`.
+        # gaussian_noise() đã trả về data + nhiễu; không cộng thêm lần nữa.
         orient = gaussian_noise(orient, GaussianNoiseCfg(mean=0.0, std=self.cfg.imu_noise_std["orientation"]))
         angular_vel = gaussian_noise(angular_vel_raw, GaussianNoiseCfg(mean=0.0, std=self.cfg.imu_noise_std["angular_velocity"]))
 
@@ -358,7 +340,7 @@ class TransformerWalkEnv(DirectRLEnv):
         position_rew = joint_position_reward(self.cmd_actions, self.base_pose, self.device)
         sig_extra = sigmoid_extra(self.cmd_actions, self.base_pose)
         vel_rew = velocity_reward(lin_vel, self.act_direction, self.obj)
-        feet_h_rew = feet_height_reward(air_time, contact_pos, 0.03, 150)
+        feet_h_rew = feet_height_reward(air_time, contact_pos, 0.04, 150)
         dev_rew = deviation_reward(self.scene.env_origins, robot_root_pos, self.obj)
         
         w = self.weights / torch.sum(self.weights, dim=1, keepdim=True)
@@ -394,7 +376,7 @@ class TransformerWalkEnv(DirectRLEnv):
         truncated = self.episode_length_buf >= self.max_episode_length - 1
         
         head_heights = as_torch(self.robot.data.root_pos_w)[:, 2]
-        height_termination = head_heights < 0.1
+        height_termination = head_heights < 0.2
         
         root_orientations = as_torch(self.robot.data.root_quat_w)
         euler_angles = quaternion_to_euler(root_orientations)
@@ -576,7 +558,7 @@ def height_reward(robot_root_pos):
 def joint_position_reward(pos_buff, start_pos, device: str):
     """Joint position reward - ✅ CHANGED: 6 joints!"""
     # ✅ CHANGED: max_diff for 6 joints [Hip, Hip, Knee, Knee, Ankle, Ankle]
-    max_diff = torch.tensor([5, 5, 5, 5, 5, 5], device=device)
+    max_diff = torch.tensor([10, 10, 10, 10, 10, 10], device=device)
     diff = torch.abs(pos_buff - start_pos)
     diff_scaled = 1 - torch.sqrt(torch.clamp(diff / max_diff.unsqueeze(0), 0, 1))
     pos_rew = torch.mean(diff_scaled, dim=1)
