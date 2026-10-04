@@ -17,8 +17,8 @@ Transform_bipedal/
 ├── NewSimple/            # Chứa mô hình robot dạng đơn giản hóa.
 ├── docs/                 # Tài liệu về cấu hình RL.
 ├── README.md             # Hướng dẫn tổng quan và cách chạy script cơ bản.
-├── CAI-DAT-ISAACLAB.md   # Hướng dẫn cài đặt IsaacLab cho dự án.
-├── guidance.md           # Hướng dẫn chi tiết / cẩm nang cho dự án.
+├── docs/isaaclab.md  # Cài đặt, vận hành IsaacLab, bảng tra lỗi (gộp CAI-DAT-ISAACLAB + guidance).
+├── docs/ALGO.md          # Thuật toán, reward, sim-to-real cho robot mới.
 └── mujoco_view.py        # Script phụ trợ để xem mô hình URDF/XML bằng thư viện MuJoCo.
 ```
 

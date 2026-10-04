@@ -272,5 +272,5 @@ Các task khác trong `source/transformer_nam/transformer_nam/tasks/direct/trans
 
 | Cần gì | Xem ở đâu |
 |---|---|
-| Quy trình hằng ngày: sửa hàm thưởng → train → play, bảng tra lỗi | [`guidance.md`](guidance.md) |
-| Máy móc: phiên bản đã cài, tối ưu CPU/RAM/VRAM, số đo `num_envs` | [`CAI-DAT-ISAACLAB.md`](CAI-DAT-ISAACLAB.md) |
+| Quy trình hằng ngày (sửa thưởng → train → play), bảng tra lỗi, máy móc, tối ưu CPU/RAM/VRAM, số đo `num_envs` | [`docs/isaaclab.md`](docs/isaaclab.md) |
+| Thuật toán, reward, sim-to-real cho robot mới | [`docs/ALGO.md`](docs/ALGO.md) |
