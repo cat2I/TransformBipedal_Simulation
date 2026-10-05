@@ -8,8 +8,15 @@
 Mới chỉ có smoke test 2 iteration; chưa có policy biết đi.
 
 - ``robot``      ArticulationCfg, đọc từ ``meta/calibration.json``, kiểm SHA-256
-- ``task_walk``  môi trường đi bộ (obs/action/reward/termination)
+- ``interface``  HỢP ĐỒNG sim ↔ nhúng: thứ tự khớp, dấu, mã hoá obs/action,
+                 chuẩn hoá, tần số 20 Hz, trễ actuator. **Dùng chung mọi task.**
+- ``task_walk``  task đi bộ: reward + điều kiện kết thúc. Kế thừa ``interface``
 - ``ppo``        siêu tham số, ``experiment_name = "officialdesign"``
+
+Thêm task mới (ví dụ đứng dậy): tạo ``task_standup.py`` kế thừa
+``OfficialInterfaceEnv``, chỉ cài ``_get_rewards`` / ``_get_dones``, rồi thêm
+một khối ``gym.register`` ở dưới. Đừng chép lại phần giao diện — firmware trên
+vi điều khiển chỉ có MỘT bộ giả định, mọi task phải dùng chung.
 
 Cấu hình đọc từ JSON chứ không viết cứng trong Python, nên sửa giới hạn góc hay
 thông số servo là sửa ``meta/calibration.json``. Nhưng ``robot.py`` kiểm SHA-256
