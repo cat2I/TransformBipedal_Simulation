@@ -435,7 +435,18 @@ Làm theo thứ tự:
 2. **Backlash** (rơ bánh răng): env cũ có mô hình rơ 2.5°, env mới **không có**. Đo độ rơ thật rồi thêm lại. Nhớ reset trạng thái rơ mỗi episode (đây là lỗi của env cũ).
 3. **Delay:** xem 3.4.
 4. **Domain randomization:** xem 3.6.
-5. **Để sau: actuator network** (mạng nơ-ron nhỏ học cách servo phản ứng: `ActuatorNetMLP`/`LSTM`). STS chỉ trả "load" với độ chính xác thấp, nên chỉ làm khi các bước trên chưa đủ.
+5. **Để sau: actuator network** (mạng nơ-ron nhỏ học cách servo phản ứng: `ActuatorNetMLP`/`LSTM`). Chỉ làm khi các bước trên chưa đủ.
+
+**Feedback dòng điện (đã kiểm tra datasheet):**
+- STS **có** trả dòng điện: thanh ghi 69–70, 1 đơn vị = 6,5 mA.
+- Thanh ghi "load" (60–61) là **% PWM** đưa vào motor, không phải dòng điện, cũng không phải mô-men.
+- Hãng **không công bố độ chính xác**. Chưa biết giá trị có dấu hay không, cũng chưa biết tần số lấy mẫu. Phải tự đo.
+- ST-3120-C001: tỉ số truyền 1/399, `Kt = 25,5 kg·cm/A` (đo ở trục ra, đã gộp hộp số). Quay không tải tốn 250 mA, tương đương khoảng 5% mô-men kẹt cứng, hoàn toàn do ma sát.
+- Hộp số tỉ số lớn làm dòng điện **không phản ánh đúng mô-men ngoài tác dụng lên khớp**:
+  - trong vùng chết của servo, bánh răng có thể tự giữ tải, nên dòng ≈ 0 dù khớp đang chịu tải;
+  - ma sát làm dòng khác nhau theo chiều quay (trễ — hysteresis);
+  - quán tính rotor bị nhân với bình phương tỉ số truyền, nên khi đổi tốc độ nhanh, dòng chủ yếu dùng để tăng tốc rotor.
+- **Cách dùng:** làm công cụ đo khi sysid, bảo vệ quá tải ở LL. **Không** đưa vào obs actor trước khi có mô hình dòng trong sim (Kt random, ma sát theo chiều quay, vùng chết, lượng tử hóa 6,5 mA, nhiễu).
 
 Mẹo: có thể giảm hệ số P trong EEPROM (bộ nhớ cấu hình) của servo cho khớp "mềm" hơn. **Đổi xong phải đo lại.**
 
@@ -451,12 +462,48 @@ Mẹo: có thể giảm hệ số P trong EEPROM (bộ nhớ cấu hình) của 
   - trễ 1–2 bước;
   - thỉnh thoảng giữ giá trị cũ (giả mất gói).
 - **Không** đưa vận tốc khớp vào actor. Phương án an toàn hơn: chỉ đưa góc thật cho critic.
+  - ⚠️ Chưa chốt. Vận tốc khớp giúp nhận ra cú va chạm khi chân chạm đất (3.3). Quyết định sau khi đo nhiễu `dq` thật (A1). Đừng cấm ngay từ đầu.
+- **Hiện obs actor chỉ có lịch sử góc *lệnh*, chưa có góc *đo*.** Đưa `q` đo vào actor là **điều kiện bắt buộc** để actor tự suy ra contact (3.3). Vì vậy B10 không còn là việc tùy chọn.
+- Đọc thêm vị trí, tốc độ, dòng trong cùng một lệnh `SYNC_READ` gần như không tốn băng thông: 6 servo, 15 byte mỗi servo, 1 Mbps, mất khoảng 1,3 ms truyền thuần. Phải đo lại trên Pi thật.
 
 ## 3.3 Contact (robot không có cảm biến tiếp đất)
 
 - Trong sim, contact chỉ dùng để tính reward và điều kiện kết thúc. Ngoài đời không tính reward, nên không cần cảm biến.
 - Actor không nhận contact. Env mới đang đúng điều này.
 - Gait clock (mục 2.3) cung cấp lịch "chân nào **nên** chống, chân nào **nên** vung". Nó không đo được chân nào **đang thực sự** chạm đất; contact trong sim mới là thông tin dùng để kiểm tra robot có làm đúng lịch khi train hay không.
+
+**Trạng thái: bỏ ngỏ, chờ thí nghiệm trong sim.**
+
+Actor có thể tự suy ra contact (suy ngầm) từ các dấu hiệu sau, với điều kiện obs có `q` đo (mục 3.2):
+- **Chân nào thấp hơn:** từ `q` và roll/pitch, mạng tính được chân nào thấp hơn. Trên nền phẳng, chân thấp hơn gần như chắc chắn là chân chống.
+- **Khớp bị đè lệch:** sai số `q_lệnh − q_đo` lớn và có hướng ổn định khi chân gánh trọng lượng. Khi chân ở trên không, sai số này nhỏ.
+- **Va chạm:** gyro và sai số khớp tăng vọt ở thời điểm chân chạm đất. Frame stack cho mạng thấy được mẫu "trước và sau" va chạm.
+
+Không có câu lệnh `if` nào trong mạng. Reward phụ thuộc vào contact, nên gradient đẩy actor tự dùng những dấu hiệu tương quan với contact.
+
+Các phương án, xếp theo mức tốn công:
+
+| # | Phương án | Thêm thông tin mới? | Độ phức tạp |
+|---|---|---|---|
+| 1 | Actor nhận `q` đo + IMU + lịch sử. Critic nhận contact thật (§2.6) | Không | Thấp, vì đằng nào cũng phải làm 3.2 |
+| 2 | Contact estimator: MLP nhỏ, input là obs actor, output là xác suất contact của 2 chân, học có giám sát bằng nhãn contact của sim. Output đưa vào actor | **Không**. Chỉ dùng lại thông tin actor đã có, nhưng làm tường minh để kiểm tra được và có thể giúp học nhanh hơn | Trung bình: code train riêng, export thêm mạng |
+| 3 | Công tắc hành trình hoặc FSR ở đế chân | **Có** | Sim: thấp (contact sensor + ngưỡng + trễ + random hỏng). Phần cứng: công tắc dễ (GPIO). FSR khó hơn (Pi không có ADC, cảm biến dễ hỏng, phi tuyến, lắp cơ khí khó) |
+| 4 | Dòng servo trong obs | Có nhưng nhiễu nặng | Cao (xem 3.1) |
+
+**Thí nghiệm quyết định (làm trong sim trước, chưa cần mua phần cứng):**
+1. Baseline: phương án 1 + gait clock.
+2. Baseline + contact lý tưởng trong obs actor, có làm bẩn (trễ, nhiễu, random hỏng). Đây là **giới hạn trên** của mọi cảm biến contact.
+3. So sánh khi bị đẩy, trên nền gồ ghề, và khi chân chạm đất sớm hoặc muộn hơn lịch của gait clock. **Không** chỉ nhìn tổng reward.
+- Nếu (2) không tốt hơn (1) rõ rệt: dừng, không cần FSR hay estimator.
+- Nếu (2) tốt hơn rõ rệt: chọn phương án 2 hoặc 3.
+
+FSR vẫn có ích để làm nhãn đúng khi kiểm tra estimator ngoài đời, kể cả khi không đưa vào obs.
+
+**Gait clock và contact thật bổ sung cho nhau, không thay thế nhau.** Clock giống bản nhạc: nó nói "**đến lượt** chân trái". Contact cho biết chân trái **đã thật sự** chạm đất hay chưa.
+- Đi đều trên nền phẳng: contact gần trùng với lịch, nên clock cộng với suy ngầm là đủ.
+- Bị đẩy, nền gồ ghề, giẫm phải vật: chân chạm đất lệch nhịp. Đây là lúc contact thật có thể giúp.
+
+TODO (user chốt): chỉ số nào, chênh lệch bao nhiêu thì coi là "tốt hơn rõ rệt". Ví dụ: thời gian trước khi ngã khi bị đẩy, sai số vận tốc, tỉ lệ trượt chân.
 
 ## 3.4 Kiến trúc 2 Pi
 
@@ -550,6 +597,12 @@ Chi tiết từng lỗi và code sửa cho env cũ: Phụ lục B.
 - [ ] A4. Đo trễ end-to-end (từ xung sync đến lúc servo nhận lệnh). Dùng số này để quyết 20 hay 50 Hz.
 - [ ] A5. Hiệu chỉnh hai IMU. Log độ lệch giữa hai con (để kiểm tra mối dock có rơ không). Đo nhiễu và bias thật.
 - [ ] A6. Đo giới hạn cơ khí thật và điểm 0 servo. Xác nhận CoM Hip. Xác nhận dấu của `rotate_right`.
+- [ ] A7. Xác nhận model servo theo từng ID: nhóm heavy là STS3095 hay ST3120? (`calibration.json` đang ghi STS3095.)
+- [ ] A8. Đo dòng điện trên bàn thử (3.1). Đọc thanh ghi 69–70, khoảng 500 mẫu mỗi trường hợp:
+  1. Treo tải tĩnh 0,5 / 1 / 2 kg ở cánh tay 10 cm. Dòng có tuyến tính không? Có lúc nào treo tải mà dòng ≈ 0 không?
+  2. Cùng tải đó, nâng lên chậm rồi hạ xuống chậm. Hai chiều chênh nhau bao nhiêu?
+  3. Dùng tay đẩy cánh tay servo theo hai chiều. Giá trị có đổi dấu không?
+  4. Quay nhanh qua lại, không tải. Dòng đỉnh là bao nhiêu?
 
 ### B. Sim + config — agy làm qua `PLAN.md`
 
@@ -565,9 +618,10 @@ Sau khi có số đo A:
 - [ ] B7. Mô phỏng hai IMU + code gộp chung sim/Pi (3.5).
 - [ ] B8. Symmetry augmentation (2.7), sau khi A6 xác nhận dấu.
 - [ ] B9. CPG + residual RL (2.4).
-- [ ] B10. (Tùy chọn) Góc servo vào obs actor, kèm nhiễu/trễ/mất gói (3.2).
+- [ ] B10. **(Bắt buộc, là nền cho 3.3)** Góc servo đo được vào obs actor, kèm nhiễu, trễ và mất gói (3.2).
 - [ ] B11. (Tùy chọn) Reward CoM/ZMP (2.5). Ablation framestack 4 vs 8 (1.5).
 - [ ] B12. (Để sau) Distillation, actuator network.
+- [ ] B13. Thí nghiệm contact trong sim (3.3), sau B2, B5 và B10: so baseline với bản có contact lý tưởng (đã làm bẩn) trong obs actor. Kết quả quyết định có làm estimator hoặc cảm biến đế chân hay không.
 
 ---
 
@@ -585,6 +639,10 @@ Sau khi có số đo A:
 | CoM Hip trái/phải | lệch khoảng 8 mm theo z | A6 / CAD |
 | Dấu `rotate_right` | +1 | A6 |
 | Mối dock cứng tuyệt đối | giả định | A5 |
+| Model servo nhóm heavy | STS3095 (`calibration.json`), user nói ST3120 | A7 |
+| Dòng servo: độ chính xác, có dấu không, tần số lấy mẫu | hãng không công bố, chỉ biết 6,5 mA/đơn vị | A8 |
+| Nhiễu `dq` đủ thấp để đưa vào actor | chưa biết (3.2 tạm cấm) | A1 |
+| Actor tự suy được contact, không cần cảm biến | chưa biết | B13 |
 
 ---
 
