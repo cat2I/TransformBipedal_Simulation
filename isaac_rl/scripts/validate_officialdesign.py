@@ -15,8 +15,8 @@ app = AppLauncher(args).app
 
 import torch
 
-from bipedal.official_config import BUILD, CALIBRATION, JOINTS
-from bipedal.official_env import OfficialWalkEnv, OfficialWalkEnvCfg, as_torch
+from bipedal.officialdesign.robot import BUILD, CALIBRATION, JOINTS
+from bipedal.officialdesign.task_walk import OfficialWalkEnv, OfficialWalkEnvCfg, as_torch
 
 
 def main():

@@ -4,65 +4,38 @@
 # SPDX-License-Identifier: BSD-3-Clause
 """Môi trường RL IsaacLab cho robot hai chân.
 
-Đăng ký task. Mỗi task thuộc về ĐÚNG MỘT robot — đó là đường biên cứng của dự
-án này: đổi robot là checkpoint, reward scale, pose và thứ tự khớp đều phải làm
-lại từ đầu, dù shape obs/action có trùng nhau đi nữa.
+Cấu trúc: MỖI ROBOT MỘT THƯ MỤC
+--------------------------------
+Robot là đường biên cứng của dự án này. Đổi robot thì checkpoint, reward scale,
+pose, giới hạn góc và thứ tự khớp đều phải làm lại từ đầu — kể cả khi shape
+obs/action trùng nhau. Đổi task trên cùng một robot thì giữ gần hết.
 
-Tên task theo mẫu ``<Robot>-<Task>-v0``.
+Thứ gì thay đổi cùng nhau thì ở cùng nhau, nên robot nằm ngoài, task nằm trong::
 
-Vì sao không dùng ``import_packages`` của IsaacLab
---------------------------------------------------
-Bản cũ để ``isaaclab_tasks.utils.import_packages`` tự quét mọi thư mục con có
-``__init__.py`` rồi nạp chúng. Hai vấn đề:
+    bipedal/
+        _shared/           dùng chung MỌI robot — cố tình để mỏng
+        officialdesign/    robot mới, đang train
+        newsimple/         robot của model_349 (0319.gif)
 
-1. Bộ lọc blacklist so khớp theo CHUỖI CON (``any(b in name for b in
-   ["utils", ".mdp"])``). Đặt tên thư mục chứa chữ "utils" là nó bị bỏ qua
-   **im lặng** — task biến mất mà không có lỗi nào.
-2. Thiếu một ``__init__.py`` ở bất kỳ tầng trung gian nào cũng cho kết quả y
-   hệt: import thành công, nhưng ``gym.make`` báo ``NameNotFound`` — một thông
-   báo chỉ sai hướng, làm người ta đi soi lại tên task.
+``_shared/`` phải mỏng. Mỗi lần định thêm gì vào đó, hỏi: "thứ này có đúng với
+MỌI robot không?" Lưỡng lự thì chép vào từng robot. Trùng lặp 30 dòng rẻ hơn
+nhiều so với một ``_shared/`` phình to rồi sửa cho robot A làm gãy robot B.
 
-Ở đây import tường minh. Thêm robot mới = thêm một dòng ``from . import <tên>``
-và một khối ``gym.register``.
+IsaacLab gốc chia ngược lại (task-first, robot nằm ở ``isaaclab_assets``) vì nó
+là thư viện benchmark: task là hằng số, robot là biến. Dự án này ngược — robot
+là hằng số của cả một giai đoạn (CAD chốt rồi, hàn rồi), task là biến.
 
-Ba task của fulltrans (Walk10DOF, Walk10DOF6, StandUp) đã đóng băng vào
-``_archive/fulltrans/`` ngày 2026-10-05: không policy nào biết đi (tốt nhất
-ep_len 83.1/200), và chúng dùng hai giao diện khác nhau (60/10 và 44/6) trên
-cùng một asset.
+Đăng ký task
+------------
+Import tường minh, KHÔNG dùng ``isaaclab_tasks.utils.import_packages``. Bộ quét
+đó lọc blacklist theo CHUỖI CON (``any(b in name for b in ["utils", ".mdp"])``),
+nên một thư mục tên chứa "utils" bị bỏ qua **im lặng**. Thiếu một ``__init__.py``
+ở tầng trung gian cũng cho kết quả y hệt: import thành công, nhưng ``gym.make``
+báo ``NameNotFound`` — thông báo chỉ sai hướng, làm người ta đi soi tên task.
+
+Thêm robot mới = tạo thư mục + thêm một dòng dưới đây.
 """
 
-import gymnasium as gym
+from . import newsimple, officialdesign  # noqa: F401
 
-from . import agents
-
-# ── OFFICIALdesign — robot mới, đang train ──────────────────────────────────
-# 13 link, 10 DOF, obs 60 / act 10. Asset: assets/officialdesign/.
-# Mới chỉ có smoke test 2 iteration; chưa có policy biết đi.
-gym.register(
-    id="Official-Walk-v0",
-    entry_point=f"{__name__}.official_env:OfficialWalkEnv",
-    disable_env_checker=True,
-    kwargs={
-        "env_cfg_entry_point": f"{__name__}.official_env:OfficialWalkEnvCfg",
-        "rsl_rl_cfg_entry_point": f"{agents.__name__}.official_ppo_cfg:OfficialWalkPPORunnerCfg",
-    },
-)
-
-# ── NewSimple — 6 DOF, asset của model_349.pt ───────────────────────────────
-# Đây là policy đứng sau 0319.gif (robot thật đi bộ). Truy ngược từ
-# trajectory_exports/trajectory_20260319_132712.json: đối chiếu đầu ra mạng với
-# raw_actions đã ghi -> khớp run 2026-03-19_13-18-11_work, sai số trung vị
-# 0.0064 (á quân 1.71, chênh 270 lần).
-#
-# Phát lại bằng:  ./play.sh newsimple 2026-03-19_13-18-11_work 349
-# (play.sh tự thêm bộ cờ env ép về đúng điều kiện lúc train — thiếu nó thì
-# policy chạy trong môi trường nhiễu khác và trông như hỏng.)
-gym.register(
-    id="NewSimple-Walk-v0",
-    entry_point=f"{__name__}.transformer_nam_env:TransformerWalkEnv",
-    disable_env_checker=True,
-    kwargs={
-        "env_cfg_entry_point": f"{__name__}.transformer_nam_env:TransformerWalkEnvCfg",
-        "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:TransformerWalkPPORunnerCfg",
-    },
-)
+__all__ = ["newsimple", "officialdesign"]

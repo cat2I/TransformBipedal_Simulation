@@ -4,7 +4,7 @@ from isaaclab.assets import ArticulationCfg
 import isaaclab.sim as sim_utils
 import math
 
-from ._asset_paths import asset_path
+from .._shared.paths import asset_path
 
 TRANSFORMER_USD = asset_path("NewSimple.usd")
 TRANSFORMER_CFG = ArticulationCfg(
@@ -97,7 +97,7 @@ from isaaclab.actuators import DCMotorCfg
 from isaaclab.assets import ArticulationCfg
 import isaaclab.sim as sim_utils
 
-from ._asset_paths import asset_path
+from .._shared.paths import asset_path
  
 # TRANSFORMER_USD = asset_path("FullForm111.usd")
 # TRANSFORMER_CFG = ArticulationCfg(

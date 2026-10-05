@@ -13,8 +13,8 @@ Ba lớp bảo đảm thư mục này không bao giờ gây lỗi im lặng:
 
 | Cơ chế | Vì sao `_archive/` nằm ngoài |
 |---|---|
-| `run.sh` đặt `PYTHONPATH=isaac_rl/source` | `_archive/` ở `isaac_rl/_archive` — khác nhánh |
-| Bộ quét `import_packages` chỉ đi trong `transformer_nam/tasks/` | ngoài tầm |
+| `_archive/` không có `__init__.py` ở gốc, và `bipedal/__init__.py` import tường minh từng robot | không nhánh nào dẫn tới nó |
+| Không còn bộ quét tự động nào (đã bỏ `import_packages` ở pha B) | ngoài tầm |
 | `pyproject.toml`: `ruff extend-exclude`, `pytest testpaths=["scripts"]` | đã loại trừ |
 
 ---
@@ -22,7 +22,7 @@ Ba lớp bảo đảm thư mục này không bao giờ gây lỗi im lặng:
 ## `newsimple/` — dòng tiến hoá dẫn tới `model_349`
 
 `model_349` là policy duy nhất đã đi được trên robot thật (`0319.gif`). Bản
-đang sống của nhánh này là `transformer_nam_env.py` (6 act / 44 obs,
+đang sống của nhánh này là `bipedal/newsimple/task_walk.py` (6 act / 44 obs,
 `NewSimple.usd`) — **vẫn nằm trong repo**, task `Transformer-Walk-Direct-v0`.
 Dưới đây là các nấc trước nó và hai nhánh rẽ của Hiếu.
 
@@ -48,7 +48,7 @@ Ba ý tưởng trong `transformer_hieu_env.py` đã chép vào
 
 - **`march_alt`** — thưởng khi đúng MỘT chân bay (+1.0), phạt hai chân chạm
   đất (−0.3) và hai chân bay (−1.0). Hiếu cho trọng số 2.0.
-  Đi kèm là phát hiện: số hạng `swing` của `official_env.py` dùng `.mean(-1)`
+  Đi kèm là phát hiện: số hạng `swing` của `bipedal/officialdesign/task_walk.py` dùng `.mean(-1)`
   nên **nhảy được điểm gấp đôi bước đi**.
 - **Đồng hồ chống đứng ì** — phạt theo *thời gian liên tục* hai chân cùng chạm
   đất, bắt được kiểu nhúc nhích tại chỗ cho có vận tốc tức thời.
@@ -71,7 +71,7 @@ Fork độc lập của `transformer_walk10dof_env.py`, cùng asset `Fulltrans10
 | `set_pose.py` | ⭐ Công cụ, xem dưới |
 
 Hai file `_lab3_compat.py` và `_asset_paths.py` của nhánh này đã **xoá** —
-chúng giống hệt từng byte bản đang sống trong `tasks/direct/transformer_nam/`.
+chúng giống hệt từng byte bản đang sống trong `bipedal/_shared/`.
 
 ### `set_pose.py` — thứ duy nhất có thể hồi sinh rẻ
 

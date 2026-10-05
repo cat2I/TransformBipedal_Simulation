@@ -7,7 +7,7 @@ import isaaclab.sim as sim_utils
 from isaaclab.actuators import DCMotorCfg
 from isaaclab.assets import ArticulationCfg
 
-from ._asset_paths import _assets_root
+from .._shared.paths import _assets_root
 
 ASSET_DIR = _assets_root() / "officialdesign"
 CALIBRATION = json.loads((ASSET_DIR / "meta/calibration.json").read_text())

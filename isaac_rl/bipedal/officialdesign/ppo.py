@@ -1,6 +1,6 @@
 """Separate logs/checkpoints for the new robot and its new control interface."""
 from isaaclab.utils.configclass import configclass
-from .rsl_rl_ppo_cfg import TransformerWalkPPORunnerCfg
+from .._shared.ppo import TransformerWalkPPORunnerCfg
 
 
 @configclass

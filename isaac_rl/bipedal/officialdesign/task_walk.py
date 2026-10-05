@@ -15,8 +15,8 @@ from isaaclab.sensors import ContactSensor, ContactSensorCfg, Imu, ImuCfg
 from isaaclab.utils.configclass import configclass
 from isaaclab_physx.physics import PhysxCfg
 
-from ._lab3_compat import as_torch
-from .official_config import BUILD, CALIBRATION, JOINTS, JOINT_NAMES, MATERIAL, OFFICIAL_CFG, USD_REPORT
+from .._shared.lab3 import as_torch
+from .robot import BUILD, CALIBRATION, JOINTS, JOINT_NAMES, MATERIAL, OFFICIAL_CFG, USD_REPORT
 
 
 def rpy_xyzw(quat):

@@ -58,7 +58,7 @@ Control:
 
 2. **Install Extensions**
    ```bash
-   python -m pip install -e source/transformer_nam
+   python -m pip install -e isaac_rl    # package tên `bipedal`
    ```
 
 3. **Verify Installation**
@@ -176,10 +176,11 @@ Transform_bipedal_todai/              # gốc repo
 │   │   ├── train.py                  #   huấn luyện
 │   │   ├── play.py                   #   chạy thử policy đã train
 │   │   └── export_trajectory.py      #   xuất quỹ đạo JSON cho robot thật
-│   ├── source/transformer_nam/       #   ← tên PACKAGE, giữ nguyên
-│   │   └── transformer_nam/          #     `import transformer_nam` trỏ vào đây
-│   │       ├── tasks/direct/transformer_nam/   # env + reward + config robot
-│   │       └── agents/                         # cấu hình PPO
+│   ├── bipedal/                      #   ← package Python, `import bipedal`
+│   │   ├── officialdesign/           #     robot mới: robot.py, task_walk.py, ppo.py
+│   │   ├── newsimple/                #     robot của model_349 (0319.gif)
+│   │   └── _shared/                  #     dùng chung mọi robot — cố tình mỏng
+│   ├── _archive/                     #   code đông lạnh, KHÔNG chạy được
 │   └── logs/rsl_rl/                  #   kết quả train (đã gitignore)
 │
 ├── mjc_rl/                           # MuJoCo + Stable-Baselines3 — bài toán twist recovery
@@ -189,9 +190,12 @@ Transform_bipedal_todai/              # gốc repo
 └── docs/
 ```
 
-> Thư mục `isaac_rl/` và package Python `transformer_nam` là **hai thứ khác nhau**.
-> Đổi tên thư mục không ảnh hưởng `import transformer_nam` — nhưng phải chạy lại
-> `pip install -e source/transformer_nam` vì pip ghi đường dẫn tuyệt đối.
+> **Mỗi robot một thư mục.** Robot là đường biên cứng: đổi robot thì checkpoint,
+> reward scale, pose và thứ tự khớp đều làm lại từ đầu, kể cả khi shape obs/action
+> trùng nhau. Đổi task trên cùng robot thì giữ gần hết.
+>
+> Di chuyển thư mục `isaac_rl/` xong phải chạy lại `pip install -e isaac_rl`, vì
+> editable install ghi **đường dẫn tuyệt đối** vào conda env.
 
 ## Key Features
 

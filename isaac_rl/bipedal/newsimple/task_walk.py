@@ -17,9 +17,9 @@ from random import uniform
 
 # TRANSFORMER_CFG = NewSimple.usd, 6 khớp, pose Hip 25° / Knee -50° / Foot 25°. Giống REF từng số.
 # Khối FullForm111 (8 khớp) trong transformer_config.py đã comment — KHÔNG mở lại (lệch shape [1,6] != [1,8]).
-from .transformer_config import TRANSFORMER_CFG
+from .robot import TRANSFORMER_CFG
 
-from ._lab3_compat import as_torch, imu_quat_w
+from .._shared.lab3 import as_torch, imu_quat_w
 
 
 @configclass

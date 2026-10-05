@@ -17,7 +17,7 @@ simulation_app = app_launcher.app
 
 # ✅ FIX: Import after AppLauncher
 import bipedal
-from bipedal.transformer_nam_env import (
+from bipedal.newsimple.task_walk import (
     TransformerWalkEnv,
     TransformerWalkEnvCfg,
 )
