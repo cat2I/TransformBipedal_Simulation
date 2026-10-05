@@ -237,19 +237,27 @@
 # All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
 
-"""Script to play a checkpoint of TransformerTwistMarch-v0 (10 DOF)."""
+"""Phát lại một checkpoint đã train.
+
+Thường dùng qua ./play.sh (nó tra task id + checkpoint + cờ env giúp bạn).
+Gọi thẳng script này thì phải tự truyền --task và --checkpoint.
+
+Phần log phía dưới vốn viết riêng cho task TransformerTwistMarch-v0 (62D obs,
+có buffer lệnh twist) — task đó đã bỏ từ lâu. Các nhánh đọc thuộc tính riêng
+của nó đều có getattr/kiểm tra None nên task khác vẫn chạy, chỉ là log thiếu
+vài cột."""
 
 import argparse
 import sys
 from isaaclab.app import AppLauncher
 import cli_args  # isort: skip
 
-parser = argparse.ArgumentParser(description="Play TransformerTwistMarch-v0 (10 DOF).")
+parser = argparse.ArgumentParser(description="Phát lại checkpoint đã train.")
 parser.add_argument("--video",             action="store_true", default=False)
 parser.add_argument("--video_length",      type=int, default=200)
 parser.add_argument("--disable_fabric",    action="store_true", default=False)
 parser.add_argument("--num_envs",          type=int, default=None)
-parser.add_argument("--task",              type=str, default="TransformerTwistMarch-v0")
+parser.add_argument("--task",              type=str, default="Official-Walk-v0")
 parser.add_argument("--agent",             type=str, default="rsl_rl_cfg_entry_point")
 parser.add_argument("--seed",              type=int, default=None)
 parser.add_argument("--use_pretrained_checkpoint", action="store_true")

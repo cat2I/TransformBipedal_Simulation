@@ -40,3 +40,12 @@ Thumbs.db
 
 # MuJoCo tu sinh moi lan chay
 **/MUJOCO_LOG.TXT
+
+# Isaac Sim / IsaacLab — gộp từ isaac_rl/.gitignore (3 nhóm mà file gốc chưa có)
+**/.pytest_cache/
+**/videos/*
+**/runs/*
+**/recordings/*
+**/wandb/*
+_isaac_sim*
+*.tmp

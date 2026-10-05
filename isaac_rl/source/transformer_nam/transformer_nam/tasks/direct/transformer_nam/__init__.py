@@ -1,14 +1,28 @@
-# Copyright (c) 2022-2025, The Isaac Lab Project Developers (https://github.com/isaac-sim/IsaacLab/blob/main/CONTRIBUTORS.md).
+# Copyright (c) 2022-2026, The Isaac Lab Project Developers (https://github.com/isaac-sim/IsaacLab/blob/main/CONTRIBUTORS.md).
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
+"""Đăng ký task. Mỗi task thuộc về ĐÚNG MỘT robot — đó là đường biên cứng của
+dự án này: đổi robot là checkpoint, reward scale, pose và thứ tự khớp đều phải
+làm lại từ đầu, dù shape obs/action có trùng nhau đi nữa.
+
+Tên task theo mẫu `<Robot>-<Task>-v0`.
+
+Ba task của fulltrans (Walk10DOF, Walk10DOF6, StandUp) đã đóng băng vào
+`_archive/fulltrans/` ngày 2026-10-05: không policy nào biết đi (tốt nhất
+ep_len 83.1/200), và chúng dùng hai giao diện khác nhau (60/10 và 44/6) trên
+cùng một asset.
+"""
 
 import gymnasium as gym
 
 from . import agents
 
+# ── OFFICIALdesign — robot mới, đang train ──────────────────────────────────
+# 13 link, 10 DOF, obs 60 / act 10. Asset: assets/officialdesign/.
+# Mới chỉ có smoke test 2 iteration; chưa có policy biết đi.
 gym.register(
-    id="Transformer-Official-10DOF-Direct-v0",
+    id="Official-Walk-v0",
     entry_point=f"{__name__}.official_env:OfficialWalkEnv",
     disable_env_checker=True,
     kwargs={
@@ -17,112 +31,21 @@ gym.register(
     },
 )
 
-##
-# Register Gym environments.
-##
-
-# ── Fulltrans10DOF.usd, RL CHỈ điều khiển 6/10 khớp (Hip/Knee/Foot) ──────────
-# Bub+Twist khoá cố định 0°, mượn cấu trúc từ bản 6DOF cũ (transformer_nam_env.py).
+# ── NewSimple — 6 DOF, asset của model_349.pt ───────────────────────────────
+# Đây là policy đứng sau 0319.gif (robot thật đi bộ). Truy ngược từ
+# trajectory_exports/trajectory_20260319_132712.json: đối chiếu đầu ra mạng với
+# raw_actions đã ghi -> khớp run 2026-03-19_13-18-11_work, sai số trung vị
+# 0.0064 (á quân 1.71, chênh 270 lần).
 #
-# ĐÍNH CHÍNH 2026-08-03 — ghi chú cũ ở đây nói chọn hướng này vì "6DOF đạt 91%
-# ở iter 87, còn 10DOF iter 499 mới 32%". So sánh đó lệch chuẩn: con số 91% là
-# của bản 6DOF chạy trên NewSimple.usd (asset đơn giản hơn nhiều), không phải
-# bản 10DOF6 chạy trên Fulltrans10DOF.usd đăng ký ở đây.
-#
-# Đo lại từ tensorboard, cùng asset thật, episode tối đa 200 bước (10.0s / 0.05s):
-#
-#   2026-07-23_15-23-03  10DOF full  iter 1500  ep_len 83.1  = 41.5%
-#   2026-07-23_15-12-33  10DOF6      iter  350  ep_len 32.9  = 16.5%
-#
-# Tức trên asset thật, 10DOF full đang NHỈNH HƠN, ngược với ghi chú cũ. Cả hai
-# đều chưa biết đi (robot ngã trước khi hết 10s). Giữ cả hai task để so tiếp.
+# Phát lại bằng:  ./play.sh newsimple 2026-03-19_13-18-11_work 349
+# (play.sh tự thêm bộ cờ env ép về đúng điều kiện lúc train — thiếu nó thì
+# policy chạy trong môi trường nhiễu khác và trông như hỏng.)
 gym.register(
-    id="Transformer-Walk10DOF6-Direct-v0",
-    entry_point=f"{__name__}.transformer_walk10dof6_env:TransformerWalk10DOF6Env",
-    disable_env_checker=True,
-    kwargs={
-        "env_cfg_entry_point": f"{__name__}.transformer_walk10dof6_env:TransformerWalk10DOF6EnvCfg",
-        "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:TransformerWalkPPORunnerCfg",
-    },
-)
-
-# ── Full 10DOF control (Bub+Hip+Twist+Knee+Foot đều RL điều khiển) ──────────
-# Run tốt nhất hiện có: 2026-07-23_15-23-03, 1500 iteration, ep_len 83.1/200.
-# Xem bảng đối chiếu ở khối chú thích phía trên.
-gym.register(
-    id="Transformer-Walk10DOF-Direct-v0",
-    entry_point=f"{__name__}.transformer_walk10dof_env:TransformerWalk10DOFEnv",
-    disable_env_checker=True,
-    kwargs={
-        "env_cfg_entry_point": f"{__name__}.transformer_walk10dof_env:TransformerWalk10DOFEnvCfg",
-        "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:TransformerWalkPPORunnerCfg",
-    },
-)
-
-# ── 6 DOF trên NewSimple.usd — asset của model_349.pt ────────────────────────
-# BẬT LẠI 2026-09-09. Đây là policy đứng sau 0319.gif (robot thật đi bộ):
-# truy ngược từ trajectory_exports/trajectory_20260319_132712.json, đối chiếu
-# đầu ra mạng với raw_actions đã ghi -> khớp run 2026-03-19_13-18-11_work với
-# sai số trung vị 0.0064 (á quân 1.71, chênh 270 lần).
-#
-# KHÔNG thay bằng Transformer-Walk10DOF6-Direct-v0 dù cũng là 44/6: task đó
-# chạy trên Fulltrans10DOF.usd, còn model_349 học trên NewSimple.usd. Kích
-# thước khớp nhưng robot khác -> phép đo vô nghĩa.
-gym.register(
-    id="Transformer-Walk-Direct-v0",
+    id="NewSimple-Walk-v0",
     entry_point=f"{__name__}.transformer_nam_env:TransformerWalkEnv",
     disable_env_checker=True,
     kwargs={
         "env_cfg_entry_point": f"{__name__}.transformer_nam_env:TransformerWalkEnvCfg",
-        "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:TransformerWalkPPORunnerCfg",
-    },
-)
-
-
-
-# gym.register(
-#     id="Transformer-SquatToStand-Direct-v0",
-#     entry_point=f"{__name__}.transformer_hieu_env:TransformerStandEnv",  # ✅ FIX
-#     disable_env_checker=True,
-#     kwargs={
-#         "env_cfg_entry_point": f"{__name__}.transformer_hieu_env:TransformerStandEnvCfg",  # ✅ OK
-#         "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:TransformerWalkPPORunnerCfg",
-#     },
-# )
-
-# import gymnasium as gym
-
-# from . import agents
-
-# from .transformer_hieu_env import (
-#     TransformerTwistMarchEnv,
-#     TransformerTwistMarchEnvCfg,
-# )
-
-# gym.register(
-#     id="TransformerTwistMarch-v0",
-
-#     entry_point=
-#         f"{__name__}.transformer_hieu_env:TransformerTwistMarchEnv",
-
-#     disable_env_checker=True,
-
-#     kwargs={
-#         "env_cfg_entry_point":
-#             f"{__name__}.transformer_hieu_env:TransformerTwistMarchEnvCfg",
-
-#         "rsl_rl_cfg_entry_point":
-#             f"{agents.__name__}.rsl_rl_ppo_cfg:"
-#             "TransformerWalkPPORunnerCfg",
-#     },
-# )
-# ── StandUp task: from split (BUB=90) to standing ──
-gym.register(
-    id="Transformer-StandUp-Direct-v0",
-    entry_point=f"{__name__}.transformer_standup_env:TransformerStandUpEnv",
-    disable_env_checker=True,
-    kwargs={
-        "env_cfg_entry_point": f"{__name__}.transformer_standup_env:TransformerStandUpEnvCfg",
         "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:TransformerWalkPPORunnerCfg",
     },
 )

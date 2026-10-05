@@ -5,7 +5,7 @@ vì các biến thể trong cùng một họ dùng chung một bộ mesh.
 
 | Thư mục | DOF | Dùng cho | Trạng thái |
 |---|---|---|---|
-| [`officialdesign/`](officialdesign/README.md) | 10 | Handoff 2026-09-30, `Transformer-Official-10DOF-Direct-v0` | robot mới |
+| [`officialdesign/`](officialdesign/README.md) | 10 | Handoff 2026-09-30, `Official-Walk-v0` | robot mới |
 | [`fulltrans/`](fulltrans/) | 8 & 10 | Task đang train (`Transformer-Walk10DOF*`) | **đang dùng** |
 | [`newsimple/`](newsimple/) | 6 | Task 6DOF cũ (`model_349.pt`) | tham chiếu |
 | [`trans3dof/`](trans3dof/) | 6 | Bản đơn giản hoá, hình khác hẳn | tham chiếu |

@@ -1,7 +1,7 @@
 # ALGO.md — Toàn bộ cách robot OFFICIALdesign học đi
 
 Người lập: Claude (Tech Lead). Cập nhật: 2026-10-02.
-Robot: OFFICIALdesign, 10 DOF. Task `Transformer-Official-10DOF-Direct-v0`.
+Robot: OFFICIALdesign, 10 DOF. Task `Official-Walk-v0`.
 File code chính: `official_env.py`, `official_config.py`, `agents/official_ppo_cfg.py`
 (cùng thư mục `isaac_rl/source/transformer_nam/transformer_nam/tasks/direct/transformer_nam/`).
 
@@ -196,6 +196,78 @@ Tổng reward nhân với `step_dt`.
 | Lệch khỏi tư thế mặc định | −0.05 | Không đi tư thế quái |
 
 **Đang thiếu:** reward theo **pha bước** (chân nào nên chạm đất lúc nào) và reward thăng bằng theo CoM. Hai mục dưới bổ sung.
+
+### 2.2.1 `swing` đang thưởng NGƯỢC với dáng đi
+
+Số hạng `+0.15 swing` ở bảng trên không trung lập với dáng đi — nó nghiêng về
+phía nhảy. Code hiện tại (`official_env.py`, trong `_get_rewards`):
+
+```python
+swing = ((~touching) * torch.exp(-((sole_height - 0.035)/0.025)**2)).mean(-1)
+```
+
+`.mean(-1)` lấy trung bình trên **hai** bàn chân. Với bàn chân ở đúng 3.5 cm:
+
+| Tình huống | Phép tính | `swing` |
+|---|---|---:|
+| Hai chân bay (nhảy) | `(1.0 + 1.0) / 2` | **1.00** |
+| Một chân bay (bước đi) | `(1.0 + 0) / 2` | **0.50** |
+| Hai chân chạm đất | `(0 + 0) / 2` | 0.00 |
+
+Nhảy được điểm **gấp đôi** bước đi.
+
+Hệ số chỉ 0.15 nên số hạng này không áp đảo. Nhưng không có số hạng nào khác
+nói "phải có một chân chạm đất", mà "nhảy về phía trước" lại thoả mãn cả ba số
+hạng lớn: bám vận tốc x, thân thẳng, và chiều cao thân (nhảy thì lên cao chứ
+không khuỵu). Ngưỡng kết thúc (`min_base_height 0.20`, `max_tilt 0.9`) cũng
+không chặn.
+
+### 2.2.2 `march_alt` — bản vá 3 dòng
+
+Nhặt từ `transformer_hieu_env.py` (env "Twist + March" của Hiếu, đã xoá khỏi
+repo 2026-10; tra lại bằng `git log --all -- "*transformer_hieu_env.py"`).
+Hiếu cho nó trọng số 2.0 — hạng mục chính, không phải phụ.
+
+```python
+in_air    = air_time > 0.05            # (N, 2) bool, cần track_air_time=True
+n_air     = in_air.sum(dim=1).float()
+march_rew = torch.where(n_air == 1, torch.ones_like(n_air),              # bước đi
+            torch.where(n_air == 0, torch.full_like(n_air, -0.3),        # đứng ì
+                                    torch.full_like(n_air, -1.0)))       # nhảy
+```
+
+Hình dạng ngược hẳn với `swing`: nó thưởng đúng cái `swing` đang phạt.
+
+**Quan hệ với §2.3 (gait clock):** gait clock là lời giải tốt hơn về lâu dài vì
+nó cho policy biết *đang ở đâu trong chu kỳ* (đổi observation, 60D → 62D, phải
+train lại từ đầu và đổi cả firmware nhúng). `march_alt` chỉ đổi reward, giữ
+nguyên giao diện 60/10, dùng được ngay. Hai thứ không loại trừ nhau — có gait
+clock rồi thì `march_alt` thành số hạng dư, bỏ đi được.
+
+### 2.2.3 Hai mẹo khác từ cùng nguồn
+
+**Đồng hồ chống đứng ì.** Hiện ta chống đứng ì *gián tiếp* qua bám vận tốc.
+Đồng hồ phạt theo **thời gian liên tục** hai chân cùng chạm đất, nên bắt được
+kiểu "nhúc nhích tại chỗ cho có vận tốc tức thời":
+
+```python
+self.static_timer = torch.where(n_air == 0, self.static_timer + self.step_dt,
+                                torch.zeros_like(self.static_timer))
+static_rew = torch.where(self.static_timer > NGUONG, -1.0, +0.5)
+```
+
+**Khoá reward theo điều kiện — chống reward hacking.** Hiếu khoá số hạng phụ,
+chỉ tính khi robot còn đứng:
+
+```python
+# CHỈ tính khi robot đang đứng — tránh học cách ngã để xoay twist
+twist_rew = torch.where(standing, raw_prog + done_bonus, 0)
+```
+
+Không khoá thì agent phát hiện "ngã xuống làm việc này dễ hơn nhiều" và đi
+thẳng tới đó. Áp dụng được cho mọi số hạng phụ: `swing` chẳng hạn, nên khoá
+theo `height > ngưỡng` để robot không ăn điểm swing trong lúc đang đổ.
+
 
 ## 2.3 Gait clock (đồng hồ nhịp bước) — thay đổi OBS
 
@@ -520,9 +592,9 @@ Sau khi có số đo A:
 ```bash
 cd isaac_rl
 # Train
-./run.sh scripts/rsl_rl/train.py --task Transformer-Official-10DOF-Direct-v0 --headless --num_envs 4096
+./run.sh scripts/rsl_rl/train.py --task Official-Walk-v0 --headless --num_envs 4096
 # Play
-./run.sh scripts/rsl_rl/play.py --task Transformer-Official-10DOF-Direct-v0 --num_envs 1 \
+./run.sh scripts/rsl_rl/play.py --task Official-Walk-v0 --num_envs 1 \
     --checkpoint "$PWD/logs/rsl_rl/officialdesign_walk/<run>/model_<N>.pt"
 # TensorBoard
 tensorboard --logdir=logs/rsl_rl/officialdesign_walk --port=6006

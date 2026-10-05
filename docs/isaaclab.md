@@ -36,7 +36,7 @@ cd ~/Documents/projects/Transformer/Transform_bipedal_todai/isaac_rl
 **Robot mới (OFFICIALdesign): train thử 3 vòng**
 
 ```bash
-./run.sh scripts/rsl_rl/train.py --task Transformer-Official-10DOF-Direct-v0 \
+./run.sh scripts/rsl_rl/train.py --task Official-Walk-v0 \
     --headless --num_envs 4096 --max_iterations 3
 ```
 
@@ -99,7 +99,7 @@ isaacsim-kernel     yêu cầu coverage==7.4.4 (đang có 7.6.1)
 
 | Task | obs | act | File env | Ghi chú |
 |---|---:|---:|---|---|
-| `Transformer-Official-10DOF-Direct-v0` | 60 | 10 | `official_env.py` | **Robot mới.** Log ở `logs/rsl_rl/officialdesign_walk/` |
+| `Official-Walk-v0` | 60 | 10 | `official_env.py` | **Robot mới.** Log ở `logs/rsl_rl/officialdesign_walk/` |
 | `Transformer-Walk10DOF-Direct-v0` | 60 | 10 | `transformer_walk10dof_env.py` | Robot cũ, đủ 10 khớp |
 | `Transformer-Walk10DOF6-Direct-v0` | 44 | 6 | `transformer_walk10dof6_env.py` | Robot cũ, RL chỉ điều khiển 6 khớp |
 
@@ -328,7 +328,7 @@ Tất cả chạy từ `isaac_rl/`.
 | Việc | Lệnh |
 |---|---|
 | Thử nhanh 3 vòng | `./run.sh scripts/rsl_rl/train.py --task <TASK> --headless --max_iterations 3` |
-| Train robot mới | `./run.sh scripts/rsl_rl/train.py --task Transformer-Official-10DOF-Direct-v0 --headless --num_envs 4096 --max_iterations 3000` |
+| Train robot mới | `./run.sh scripts/rsl_rl/train.py --task Official-Walk-v0 --headless --num_envs 4096 --max_iterations 3000` |
 | Train robot cũ | `./run.sh scripts/rsl_rl/train.py --task Transformer-Walk10DOF-Direct-v0 --headless --max_iterations 1500` |
 | Train tiếp | thêm `--resume --load_run <thư-mục> --checkpoint <tên-file>` |
 | Play (có cửa sổ) | `./run.sh scripts/rsl_rl/play.py --task <TASK> --num_envs 1 --checkpoint "$PWD/logs/rsl_rl/<exp>/<run>/model_<N>.pt"` |

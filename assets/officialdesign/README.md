@@ -1,6 +1,6 @@
 # OFFICIALdesign — handoff 2026-09-30
 
-Task mới: **`Transformer-Official-10DOF-Direct-v0`**, train từ đầu.
+Task mới: **`Official-Walk-v0`**, train từ đầu.
 Nguồn CAD gốc được giữ tại `sim_handoff /`. Các task và checkpoint robot cũ
 không đổi. Checkpoint cũ không tương thích ngữ nghĩa dù có cùng shape 60/10.
 
@@ -85,13 +85,13 @@ Từ thư mục `isaac_rl/`:
 ```bash
 # Train/test ngắn
 ./run.sh scripts/validate_officialdesign.py --headless
-./run.sh scripts/rsl_rl/train.py --task Transformer-Official-10DOF-Direct-v0 --num_envs 256 --headless --max_iterations 2
+./run.sh scripts/rsl_rl/train.py --task Official-Walk-v0 --num_envs 256 --headless --max_iterations 2
 
 # Train thật; log riêng tại logs/rsl_rl/officialdesign_walk/
-./run.sh scripts/rsl_rl/train.py --task Transformer-Official-10DOF-Direct-v0 --num_envs 256 --headless --max_iterations 3000
+./run.sh scripts/rsl_rl/train.py --task Official-Walk-v0 --num_envs 256 --headless --max_iterations 3000
 
 # Xem checkpoint mới (thay <run> và <iteration>)
-./run.sh scripts/rsl_rl/play.py --task Transformer-Official-10DOF-Direct-v0 --num_envs 1 --checkpoint "$PWD/logs/rsl_rl/officialdesign_walk/<run>/model_<iteration>.pt"
+./run.sh scripts/rsl_rl/play.py --task Official-Walk-v0 --num_envs 1 --checkpoint "$PWD/logs/rsl_rl/officialdesign_walk/<run>/model_<iteration>.pt"
 ```
 
 Không cần convert lại để chạy asset đã bàn giao. Khi cập nhật CAD/calibration:

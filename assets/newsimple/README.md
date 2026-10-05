@@ -2,7 +2,7 @@
 
 SW2URDF, **2026-03-17 23:10**. Hip, Knee, Foot × 2. Không có Bub, không có Twist.
 
-Là asset của task 6DOF cũ `Transformer-Walk-Direct-v0` (đã comment out trong `__init__.py`)
+Là asset của task 6DOF cũ `NewSimple-Walk-v0` (đã comment out trong `__init__.py`)
 — checkpoint `model_349.pt` train trên bản này. Giữ lại để rollback / đối chiếu.
 
 | Giới hạn cơ khí | Hip | Knee | Foot |

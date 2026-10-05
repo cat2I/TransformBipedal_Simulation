@@ -67,7 +67,7 @@ Control:
 ```bash
 # Headless mode, 512 environments, 350 iterations
 ~/IsaacLab/isaac-sim/python.sh scripts/rsl_rl/train.py \
-    --task Transformer-Walk-Direct-v0 \
+    --task NewSimple-Walk-v0 \
     --num_envs 512 \
     --headless \
     --max_iterations 350
@@ -83,7 +83,7 @@ tensorboard --logdir=logs/rsl_rl/transformer_walk --port=6006
 ### Run Trained Policy
 ```bash
 ~/IsaacLab/isaac-sim/python.sh scripts/rsl_rl/play.py \
-    --task Transformer-Walk-Direct-v0 \
+    --task NewSimple-Walk-v0 \
     --num_envs 1 \
     --load_run logs/rsl_rl/transformer_walk/<checkpoint>
 ```

@@ -10,7 +10,7 @@
 
 # # Register environment
 # gym.register(
-#     id="Transformer-Walk-Direct-v0",
+#     id="NewSimple-Walk-v0",
 #     entry_point="transformer_nam.tasks.direct.transformer_nam.transformer_nam_env:TransformerWalkEnv",
 #     disable_env_checker=True,
 #     kwargs={
