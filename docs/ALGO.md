@@ -1,6 +1,6 @@
 # ALGO.md — Toàn bộ cách robot OFFICIALdesign học đi
 
-Người lập: Claude (Tech Lead). Cập nhật: 2026-10-02.
+Người lập: Claude (Tech Lead). Cập nhật: 2026-10-05.
 Robot: OFFICIALdesign, 10 DOF. Task `Official-Walk-v0`.
 File code chính: `bipedal/officialdesign/task_walk.py`, `bipedal/officialdesign/robot.py`, `bipedal/officialdesign/ppo.py`
 (cùng thư mục `isaac_rl/bipedal/`).
@@ -25,7 +25,7 @@ Tầng 1 **không biết gì về robot**: cùng một config dùng được cho
 
 ### 0.2 Tóm tắt quyết định
 - **Tầng 1:** giữ PPO + MLP. Bật asymmetric critic, symmetry, chuẩn hóa obs cho critic. Tăng `num_envs`, giảm `init_std`.
-- **Tầng 2:** thêm gait clock → CPG + residual RL. ZMP chỉ dùng làm reward.
+- **Tầng 2:** thêm gait clock trước (B5). CPG + residual RL (B9) chỉ làm khi bị kẹt ở giới hạn tốc độ servo (mục 2.4.2). ZMP chỉ dùng làm reward.
 - **Tầng 3:** đo servo và độ trễ trước. Khôi phục domain randomization (env mới đang thiếu gần hết). Delay riêng từng chân. Gộp 2 IMU.
 
 ### 0.3 Phần cứng (không thay đổi được)
@@ -44,6 +44,19 @@ Robot gồm 2 module chân riêng. Mỗi module từng là xe + tay máy, nay do
 Thuật ngữ:
 - **Servo bus** (Feetech STS): nhiều servo nối chung một dây tín hiệu. Mình ra lệnh "quay tới góc X", bộ PID bên trong servo lo phần còn lại. **Không ra lệnh lực (torque) trực tiếp được.**
 - **Stall torque**: lực xoắn lớn nhất khi servo bị giữ đứng yên. Lúc đang quay thì lực thấp hơn.
+
+### 0.4 Cái gì lên robot thật, cái gì chỉ để train
+
+**Quy tắc:** thứ gì là **đầu vào của actor** hoặc **một phần của action** lúc train thì bắt buộc phải có lúc deploy, và phải tính **giống hệt** sim. Thứ chỉ dùng để "mớm" lúc train thì chỉ được nằm ở **reward** hoặc **critic**.
+
+Mẹo phân loại: thứ đó có nằm trên đường đi từ cảm biến tới servo không? Có thì phải deploy. Không thì bỏ được.
+
+| Chỉ dùng lúc train (deploy bỏ đi) | Phải mang lên robot thật |
+|---|---|
+| Critic (1.2) | Actor (file ONNX) |
+| Reward, kể cả ZMP reward (2.5) | **Gait clock**, vì pha là đầu vào của actor (2.3) |
+| Contact, obs đặc quyền của critic (2.6) | **CPG + bộ sinh quỹ đạo**, vì góc mẫu là một nửa của lệnh góc (2.4) |
+| Symmetry augmentation, domain randomization | Bộ gộp 2 IMU (3.5), giới hạn góc/tốc độ, framestack |
 
 ---
 
@@ -320,6 +333,53 @@ Ví dụ `T = 1 giây`, cập nhật ở 20 Hz (`Δt = 0.05 giây`), thì mỗi 
 
 **Giới hạn cần hiểu:** đồng hồ cho biết chân nào **nên** chạm đất theo lịch, không cho biết chân nào **đang thực sự** chạm đất. Nếu chân bị vướng, đồng hồ vẫn chạy. Nó không thay thế cảm biến contact và không tự bảo đảm robot giữ thăng bằng. Khi chỉ thêm gait clock, đồng hồ cũng chưa sinh lệnh góc khớp; policy vẫn phải học cách cử động để làm theo nhịp.
 
+### 2.3.1 Nhược điểm của gait clock
+
+1. **Nhịp cố định, không phản ứng.** Bị đẩy thì robot nên bước gấp một bước, nhưng đồng hồ vẫn đếm đều. Cách vá: cho policy thêm 1 action chỉnh tốc độ đồng hồ.
+2. **Đứng yên vẫn dậm chân.** Đồng hồ chạy liên tục nên robot luôn bị "bảo" phải nhấc chân. Xử lý ở 2.3.4.
+3. **Chọn sai `T` thì robot không theo kịp.** Khớp đổi tối đa 40°/s (2.1). Lịch đòi nhấc chân nhanh hơn mức đó thì robot bị phạt mãi dù cố hết sức, nên học rất tệ. Kiểm tra trước khi chọn `T`:
+   ```text
+   thời gian vung tối thiểu = (góc gập + góc duỗi) / tốc độ khớp tối đa
+   T tối thiểu = thời gian vung tối thiểu / tỉ lệ vung trong chu kỳ
+   ```
+   TODO: tính lại với biên độ khớp thật và tốc độ servo đo ở A1.
+4. **Dáng đi do người áp đặt.** Tỉ lệ chống/vung do người chọn, chưa chắc tối ưu cho robot này. Đổi kiểu đi (đi ↔ chạy) khó.
+5. **Thêm việc đồng bộ sim ↔ Pi.** Obs đổi shape nên phải train lại từ đầu. Pi phải tính pha giống hệt sim: cùng `T`, cùng `p` lúc reset, cùng cách xử lý khi vòng lặp bị trễ.
+
+### 2.3.2 So với chỉ dùng reward (không có đồng hồ)
+
+| | Chỉ reward (`air_time`, `march_alt` ở 2.2.2) | Gait clock |
+|---|---|---|
+| Tốc độ học | Chậm, hay kẹt ở dáng lạ (nhảy, lê chân, khập khiễng) | Nhanh, ổn định |
+| Linh hoạt | Cao: nhịp tự nảy sinh, tự bước gấp khi bị đẩy | Thấp: bị khóa theo nhịp |
+| Đứng yên | Tự nhiên | Phải xử lý thêm |
+| Đổi obs / firmware | Không | Có |
+| Tham số phải chọn | Ít | `T`, tỉ lệ chống/vung |
+
+**Lý do mạnh nhất để thêm đồng hồ cho robot này:** actor là MLP không có trí nhớ, chỉ thấy 4 frame = 200 ms (1.5). Một chu kỳ bước dài khoảng 1 s. Không có đồng hồ thì actor phải đoán "đang ở đâu trong vòng" chỉ từ tư thế thân, việc này khó hơn nhiều.
+
+### 2.3.3 Bỏ đồng hồ khi deploy được không?
+
+**Không**, nếu actor đã được train với pha trong obs. Policy không thuộc lòng dáng đi. Thứ nó học là ánh xạ `(tư thế + sin/cos pha) → góc khớp`. Bỏ đồng hồ thì 2 ô pha thành rác, policy coi như thời gian đứng yên, nên không bước hoặc bước loạn. Đồng hồ trên Pi chỉ tốn 2 dòng code.
+
+Muốn dùng đồng hồ/CPG **chỉ để mớm lúc train**, có 3 cách đúng:
+
+| Cách | Làm gì | Cái giá |
+|---|---|---|
+| Đồng hồ chỉ ở reward + critic | Actor xuất góc đầy đủ, không thấy pha | Actor tự giữ nhịp ~1 s với trí nhớ 200 ms. Cần thêm lịch sử hoặc LSTM (A.4) |
+| Giảm dần CPG (curriculum) | `góc = α·góc_mẫu + action`, α giảm từ 1 về 0 khi train | Vướng vấn đề trí nhớ như trên |
+| Teacher → student (A.5) | Teacher train có CPG/đồng hồ. Student chỉ dùng cảm biến thật, bắt chước góc cuối của teacher | Thêm một giai đoạn train, student cần trí nhớ |
+
+Cả 3 cách đều phải trả giá bằng trí nhớ của mạng. Hiện chưa có lý do để làm.
+
+### 2.3.4 Điều khiển đi / dừng / rẽ
+
+Gait clock dùng được với lệnh điều khiển. Đây là cách phổ biến. Cần thêm:
+1. **Lệnh vào obs actor**: `(vx, vy, ωz)`. Lúc train phải random lệnh, **kể cả lệnh 0**. Hiện env cố định +x 0.15 m/s (mục 4, lỗi 8.5).
+2. **Khi lệnh ≈ 0**: reward theo pha đổi thành "hai chân cùng chống", có thể dừng luôn đồng hồ. Chỉ dừng ở **pha chống kép**. Dừng giữa lúc đang vung thì robot đứng một chân và đổ.
+
+TODO (user chốt): danh sách lệnh cần có (chỉ đi tới/dừng, hay thêm rẽ, đi ngang). Danh sách này quyết định obs thêm mấy số.
+
 ## 2.4 CPG + residual RL — thay đổi ACTION
 
 **Có: góc mẫu và quỹ đạo mẫu liên quan trực tiếp đến các góc khớp tạo thành dáng đi.** Cách viết “CPG sinh chuyển động mẫu” ở đây là cách gọi gọn cho **bộ tạo nhịp CPG + phần chuyển nhịp thành chuyển động của robot**. CPG (Central Pattern Generator) tạo tín hiệu dao động có nhịp; muốn dùng tín hiệu đó để điều khiển robot, phải quy định nó tương ứng với chuyển động nào. Chỉ biết thời gian và pha thì chưa biết Hip, Knee, Foot phải quay bao nhiêu độ.
@@ -381,6 +441,65 @@ Rủi ro cần chú ý:
 - Phần sửa cho phép quá nhỏ: robot bị "khóa" vào dáng CPG, không tự cứu được khi bị đẩy.
 - Phần sửa quá lớn: policy bỏ qua CPG luôn.
 - Nên cho policy chỉnh được cả **tần số và biên độ** CPG.
+
+### 2.4.1 CPG + residual cần gì khi deploy
+
+CPG vốn **là** đồng hồ + bộ sinh góc mẫu. Policy chỉ xuất phần sửa (vài độ). Bỏ CPG trên Pi thì servo chỉ nhận mấy độ sửa đó, nên robot đứng quanh tư thế mặc định hoặc khuỵu.
+
+Pi phải chạy y hệt sim:
+1. **Đồng hồ pha**: cùng `T`, cùng `p` lúc bắt đầu.
+2. **Bộ sinh quỹ đạo**: cùng công thức, cùng tham số.
+3. **Phép cộng**: `góc mục tiêu = góc mẫu + góc sửa`, rồi clamp vào cùng giới hạn góc và tốc độ như sim.
+
+CPG cần từng phần của gait clock (2.3) ở mức khác nhau:
+
+| Phần của gait clock | CPG + residual có cần không? |
+|---|---|
+| Bộ đếm pha `p` | **Bắt buộc.** Không có `p` thì không có góc mẫu |
+| Pha trong obs actor (`sin/cos`) | **Nên có.** Phần sửa phụ thuộc thời điểm trong vòng bước (sắp chạm đất khác đang vung). Không có thì actor tự đoán từ 200 ms lịch sử |
+| Reward theo lịch chống/vung | **Không bắt buộc.** Góc mẫu đã áp nhịp. Giữ trọng số nhỏ để policy không sửa phá nhịp |
+
+### 2.4.2 Gait clock hay CPG + residual: chọn cái nào
+
+Hai phương pháp **khác nhau nhưng lồng nhau**. CPG chứa sẵn một đồng hồ. Khác nhau ở chỗ đồng hồ dùng để làm gì:
+
+| | 2.3 Gait clock | 2.4 CPG + residual |
+|---|---|---|
+| Đồng hồ đưa vào đâu | Obs + reward | Bộ sinh quỹ đạo → **góc mẫu trong action** (thường đưa cả vào obs) |
+| Policy xuất | **Góc đầy đủ** | **Góc sửa** |
+| Ai tạo dáng đi | Policy tự học | Người thiết kế quỹ đạo mẫu, policy chỉ sửa |
+
+Có thể coi là hai núm vặn độc lập:
+- **Núm A: actor có thấy pha không?** Có (khuyến nghị) / không (chỉ ở reward + critic, xem 2.3.3).
+- **Núm B: có dáng đi mẫu không?** Không (chỉ reward lịch tiếp đất) / có, đặt trong **reward** (thưởng bám quỹ đạo góc mẫu) / có, đặt trong **action** (CPG + residual).
+
+**Vì sao tồn tại hai cách.** Hai cách ra đời ở hai thời kỳ:
+- **CPG + residual có trước.** CPG gốc từ sinh học và robotics cổ điển. Hồi đó RL còn yếu, tốn dữ liệu, nên giữ bộ tạo dáng đi sẵn có và cho RL sửa thêm.
+- **Gait clock + RL có sau (khoảng từ 2020).** Sim song song (Isaac Gym) làm dữ liệu gần như miễn phí, nên mớm cho RL ít nhất có thể và để nó tự tìm dáng đi.
+
+**Khi nào dùng cách nào:**
+
+| Tình huống | Hợp với |
+|---|---|
+| Ít tài nguyên train, sim chậm | CPG + residual |
+| Servo yếu/chậm, cần dáng đi an toàn, đoán trước được | CPG + residual |
+| Đã có sẵn dáng đi tốt (ZMP, tay chỉnh), muốn RL làm cứng cáp hơn | CPG + residual |
+| Train song song nhiều env | Gait clock |
+| Cần nhiều lệnh: đi, dừng, rẽ, đi ngang, đổi tốc độ | Gait clock. CPG phải thiết kế thêm quỹ đạo mẫu cho từng kiểu |
+| Cần phản ứng mạnh khi bị đẩy, nền gồ ghề | Gait clock |
+
+**Các nhóm chuyên nghiệp chọn gì:**
+- 2018–2020: bộ sinh quỹ đạo + RL. Google Minitaur dùng PMTG (Iscen et al. 2018). ETH ANYmal (Lee et al. 2020) dùng bộ sinh quỹ đạo bàn chân theo pha, RL chỉnh tần số và cộng phần sửa.
+- Từ 2021: phần lớn biped/humanoid chuyển sang gait clock (hoặc periodic reward) + RL: Cassie (Siekmann et al. 2021), unitree_rl_gym cho G1/H1 (pha `sin/cos` trong obs + reward tiếp đất theo pha). Robot 4 chân nhiều nhóm bỏ luôn đồng hồ (legged_gym ANYmal chỉ thưởng `feet_air_time`).
+- Dạng lai: Humanoid-Gym (2024) dùng gait clock trong obs + **reward** bám quỹ đạo góc mẫu đơn giản, tức mớm dáng đi qua reward chứ không qua action.
+
+**Quyết định cho OFFICIALdesign:** gait clock trong obs actor + reward theo lịch tiếp đất (B5), chưa có dáng mẫu. Lý do: chưa có quỹ đạo mẫu cho 10 khớp, chưa có số đo servo (A1), và cần điều khiển đi/dừng. Sau khi train B5, đọc kết quả:
+
+| Thấy gì | Nghĩa là | Làm gì |
+|---|---|---|
+| Bước đúng nhịp, đi ổn | B5 đủ | Chuyển sang DR / sim-to-real |
+| Đúng nhịp nhưng nhấc chân thấp, lê, chậm | Kẹt ở 40°/s | Tăng `action_step_deg` trước. Vẫn không được thì B9 (CPG) |
+| Dáng kỳ quặc, mỗi lần train ra một dáng | RL tự mò khó | Thêm dáng mẫu: reward bám quỹ đạo hoặc B9 |
 
 ## 2.5 ZMP — thay đổi REWARD
 
@@ -673,6 +792,10 @@ tensorboard --logdir=logs/officialdesign_walk --port=6006
 - Huang et al. — *The 37 Implementation Details of PPO*.
 - Rudin et al. 2021 — *Learning to Walk in Minutes* (gốc của rsl_rl).
 - Mittal et al. 2024 — symmetry trong RL robot (tác giả của `RslRlSymmetryCfg`).
+- Siekmann et al. 2021 — *Sim-to-Real Learning of All Common Bipedal Gaits via Periodic Reward Composition* (gait clock, Cassie).
+- Iscen et al. 2018 — *Policies Modulating Trajectory Generators* (PMTG).
+- Lee et al. 2020 — *Learning Quadrupedal Locomotion over Challenging Terrain* (bộ sinh quỹ đạo + RL, ANYmal).
+- Gu et al. 2024 — *Humanoid-Gym* (gait clock + reward bám quỹ đạo mẫu).
 - Source: `rsl_rl/algorithms/ppo.py`.
 
 ---
