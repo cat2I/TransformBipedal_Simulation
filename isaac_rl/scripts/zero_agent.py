@@ -35,7 +35,7 @@ import torch
 import isaaclab_tasks  # noqa: F401
 from isaaclab_tasks.utils import parse_env_cfg
 
-import transformer_nam.tasks  # noqa: F401
+import bipedal  # noqa: F401
 
 
 def main():

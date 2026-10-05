@@ -32,7 +32,7 @@ from isaaclab_rl.rsl_rl import RslRlVecEnvWrapper
 import isaaclab_tasks  # noqa: F401
 from isaaclab_tasks.utils import get_checkpoint_path
 from isaaclab_tasks.utils.hydra import hydra_task_config
-import transformer_nam.tasks  # noqa: F401
+import bipedal  # noqa: F401
 
 
 @hydra_task_config(args_cli.task, args_cli.agent)

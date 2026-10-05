@@ -110,9 +110,14 @@ def overwrite_python_analysis_extra_paths(isaaclab_settings: str) -> str:
             "\n\tWe are working on a fix for this issue with the Isaac Sim team."
         )
 
-    # add the path names that are in the Isaac Lab extensions directory
-    isaaclab_extensions = os.listdir(os.path.join(PROJECT_DIR, "source"))
-    path_names.extend(['"${workspaceFolder}/source/' + ext + '"' for ext in isaaclab_extensions])
+    # Bản gốc liệt kê các extension trong source/. Project đã bỏ thư mục đó
+    # (2026-10): package `bipedal` nằm thẳng ở gốc isaac_rl/. Giữ nhánh source/
+    # để script vẫn chạy được trên một checkout IsaacLab upstream.
+    source_dir = os.path.join(PROJECT_DIR, "source")
+    if os.path.isdir(source_dir):
+        path_names.extend(['"${workspaceFolder}/source/' + ext + '"' for ext in os.listdir(source_dir)])
+    else:
+        path_names.append('"${workspaceFolder}"')
 
     # combine them into a single string
     path_names = ",\n\t\t".expandtabs(4).join(path_names)

@@ -2,14 +2,31 @@
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
-"""Đăng ký task. Mỗi task thuộc về ĐÚNG MỘT robot — đó là đường biên cứng của
-dự án này: đổi robot là checkpoint, reward scale, pose và thứ tự khớp đều phải
-làm lại từ đầu, dù shape obs/action có trùng nhau đi nữa.
+"""Môi trường RL IsaacLab cho robot hai chân.
 
-Tên task theo mẫu `<Robot>-<Task>-v0`.
+Đăng ký task. Mỗi task thuộc về ĐÚNG MỘT robot — đó là đường biên cứng của dự
+án này: đổi robot là checkpoint, reward scale, pose và thứ tự khớp đều phải làm
+lại từ đầu, dù shape obs/action có trùng nhau đi nữa.
+
+Tên task theo mẫu ``<Robot>-<Task>-v0``.
+
+Vì sao không dùng ``import_packages`` của IsaacLab
+--------------------------------------------------
+Bản cũ để ``isaaclab_tasks.utils.import_packages`` tự quét mọi thư mục con có
+``__init__.py`` rồi nạp chúng. Hai vấn đề:
+
+1. Bộ lọc blacklist so khớp theo CHUỖI CON (``any(b in name for b in
+   ["utils", ".mdp"])``). Đặt tên thư mục chứa chữ "utils" là nó bị bỏ qua
+   **im lặng** — task biến mất mà không có lỗi nào.
+2. Thiếu một ``__init__.py`` ở bất kỳ tầng trung gian nào cũng cho kết quả y
+   hệt: import thành công, nhưng ``gym.make`` báo ``NameNotFound`` — một thông
+   báo chỉ sai hướng, làm người ta đi soi lại tên task.
+
+Ở đây import tường minh. Thêm robot mới = thêm một dòng ``from . import <tên>``
+và một khối ``gym.register``.
 
 Ba task của fulltrans (Walk10DOF, Walk10DOF6, StandUp) đã đóng băng vào
-`_archive/fulltrans/` ngày 2026-10-05: không policy nào biết đi (tốt nhất
+``_archive/fulltrans/`` ngày 2026-10-05: không policy nào biết đi (tốt nhất
 ep_len 83.1/200), và chúng dùng hai giao diện khác nhau (60/10 và 44/6) trên
 cùng một asset.
 """

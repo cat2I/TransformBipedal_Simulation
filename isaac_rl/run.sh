@@ -8,10 +8,10 @@
 #  rồi gọi python bình thường.
 #
 #  Cách dùng:
-#      ./run.sh scripts/rsl_rl/train.py --task Transformer-Walk10DOF-Direct-v0 \
+#      ./run.sh scripts/rsl_rl/train.py --task Official-Walk-v0 \
 #               --num_envs 512 --headless --max_iterations 350
 #
-#      ./run.sh scripts/rsl_rl/play.py  --task Transformer-Walk10DOF-Direct-v0 \
+#      ./run.sh scripts/rsl_rl/play.py  --task Official-Walk-v0 \
 #               --num_envs 1 --load_run 2026-07-27_15-02-49
 # =============================================================================
 set -euo pipefail
@@ -27,7 +27,7 @@ ISAAC_ENV_CANDIDATES=(isaacsim isaaclab30 isaaclab)
 
 if [[ $# -eq 0 ]]; then
     echo "Dùng: $0 <script.py> [tham số...]" >&2
-    echo "  vd: $0 scripts/rsl_rl/train.py --task Transformer-Walk10DOF-Direct-v0 --headless" >&2
+    echo "  vd: $0 scripts/rsl_rl/train.py --task Official-Walk-v0 --headless" >&2
     exit 1
 fi
 
@@ -65,7 +65,10 @@ fi
 conda activate "$CONDA_ENV"
 
 # --- môi trường cho Isaac Sim ------------------------------------------------
-export PYTHONPATH="${SCRIPT_DIR}/source${PYTHONPATH:+:$PYTHONPATH}"
+# Trỏ vào gốc isaac_rl/ (package `bipedal` nằm ngay đó). Trước đây trỏ source/,
+# nhưng thư mục đó chỉ là vỏ của IsaacLab extension template — đã bỏ 2026-10.
+# Nhờ dòng này, `import bipedal` chạy được KỂ CẢ KHI chưa `pip install -e`.
+export PYTHONPATH="${SCRIPT_DIR}${PYTHONPATH:+:$PYTHONPATH}"
 export OMNI_KIT_ACCEPT_EULA=YES
 # RTX 4050 chỉ có 6GB VRAM, dễ phân mảnh -> cho allocator co giãn
 export PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}"

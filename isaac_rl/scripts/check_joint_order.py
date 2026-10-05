@@ -5,7 +5,7 @@ app_launcher = AppLauncher(headless=True)
 simulation_app = app_launcher.app
 
 # Import after AppLauncher
-from transformer_nam.tasks.direct.transformer_nam.transformer_config import TRANSFORMER_CFG
+from bipedal.transformer_config import TRANSFORMER_CFG
 from isaaclab.assets import Articulation, ArticulationCfg
 from isaaclab.scene import InteractiveScene, InteractiveSceneCfg
 from isaaclab.sim import SimulationContext, SimulationCfg

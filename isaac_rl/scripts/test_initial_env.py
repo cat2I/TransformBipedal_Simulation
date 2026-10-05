@@ -16,8 +16,8 @@ app_launcher = AppLauncher(args_cli)
 simulation_app = app_launcher.app
 
 # ✅ FIX: Import after AppLauncher
-import transformer_nam.tasks.direct.transformer_nam
-from transformer_nam.tasks.direct.transformer_nam.transformer_nam_env import (
+import bipedal
+from bipedal.transformer_nam_env import (
     TransformerWalkEnv,
     TransformerWalkEnvCfg,
 )
