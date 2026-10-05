@@ -24,7 +24,10 @@ class TransformerWalkPPORunnerCfg(RslRlOnPolicyRunnerCfg):
     num_steps_per_env = 24
     max_iterations = 5000
     save_interval = 50
-    experiment_name = "transformer_walk"
+    # Lớp NỀN — mỗi robot kế thừa rồi đặt experiment_name của mình
+    # (bipedal/<robot>/ppo.py). Giá trị ở đây chỉ là phòng hờ: nếu thấy
+    # logs/_chua_dat_ten/ xuất hiện nghĩa là có robot quên override.
+    experiment_name = "_chua_dat_ten"
 
     # Policy network — trước đây là policy.actor_hidden_dims
     actor = RslRlMLPModelCfg(

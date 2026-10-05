@@ -5,5 +5,5 @@ from .._shared.ppo import TransformerWalkPPORunnerCfg
 
 @configclass
 class OfficialWalkPPORunnerCfg(TransformerWalkPPORunnerCfg):
-    experiment_name = "officialdesign_walk"
+    experiment_name = "officialdesign"
     max_iterations = 3000

@@ -17,8 +17,8 @@ Bảng tra nhanh cho [`play.sh`](play.sh). Thay cho `play6.sh` / `play10.sh` cũ
 
 | `<robot>` | Gym task | Log dir | Asset | obs/act | Tình trạng |
 |---|---|---|---|---:|---|
-| `official` | `Official-Walk-v0` | `officialdesign_walk` | `assets/officialdesign` | 60 / 10 | Robot mới. Mới chỉ smoke test 2 iteration |
-| `newsimple` | `NewSimple-Walk-v0` | `transformer_walk` | `assets/newsimple` | 44 / 6 | **`model_349` — policy DUY NHẤT đã đi được trên robot thật** (`0319.gif`) |
+| `official` | `Official-Walk-v0` | `logs/officialdesign/` | `assets/officialdesign` | 60 / 10 | Robot mới. Mới chỉ smoke test 2 iteration |
+| `newsimple` | `NewSimple-Walk-v0` | `logs/newsimple/` + `logs/old/` | `assets/newsimple` | 44 / 6 | **`model_349` — policy DUY NHẤT đã đi được trên robot thật** (`0319.gif`) |
 
 > **Ba task `fulltrans` đã đóng băng** vào `_archive/fulltrans/` ngày 2026-10-05
 > (`Walk10DOF`, `Walk10DOF6`, `StandUp`). Không policy nào biết đi, và chúng dùng
@@ -64,15 +64,26 @@ và trông như "policy hỏng" dù thực ra chỉ sai điều kiện phát l�
 
 ## ⚠️ Log dir dùng chung
 
-`logs/rsl_rl/transformer_walk/` chứa **93 run của nhiều task khác nhau** — gồm
-cả ba task `fulltrans` đã đóng băng — vì cả nhóm từng kế thừa
+`logs/old/` chứa **96 run của nhiều task khác nhau** — gồm cả ba task
+`fulltrans` đã đóng băng — vì cả nhóm từng kế thừa
 `TransformerWalkPPORunnerCfg` mà không override `experiment_name`.
 
-Hệ quả: **tên run không cho biết nó thuộc task nào.** Phải mở
-`<run>/params/env.yaml` xem `num_actions` mới chắc.
+**Tên run không cho biết nó thuộc task nào.** Phải mở `<run>/params/env.yaml`
+xem `num_actions` mới chắc. Vì không phân biệt được nên không tách ra được —
+cứ để nguyên một đống.
 
-Kế hoạch dọn (nhóm việc cuối): gom 93 run vào `logs/old/`, bỏ luôn tầng
-`rsl_rl/` thừa, log mới đặt theo `<robot>_<task>`.
+Run MỚI thì sạch: `logs/<robot>/`. `play.sh` tìm trong cả hai nên bạn không
+cần biết checkpoint nằm ở đâu:
+
+```
+logs/
+├── old/              96 run cũ lẫn lộn (có model_349)
+├── newsimple/        run mới của newsimple
+└── officialdesign/   run mới của robot mới
+```
+
+Tầng `rsl_rl/` ở giữa đã bỏ — đó là quy ước IsaacLab (`logs/<thư viện RL>/`)
+để chứa nhiều thư viện song song, mà project chỉ dùng `rsl_rl`.
 
 ## Thêm robot mới
 

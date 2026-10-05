@@ -30,14 +30,14 @@ declare -A TASK=(
     [newsimple]="NewSimple-Walk-v0"
 )
 
-# Thư mục log = agent_cfg.experiment_name.
-# LƯU Ý: newsimple vẫn trỏ "transformer_walk" — 93 run trong đó là của NHIỀU
-# task khác nhau (gồm cả 3 task fulltrans đã đóng băng), vì cả nhóm từng kế
-# thừa TransformerWalkPPORunnerCfg mà không override experiment_name.
-# Việc gom chúng vào logs/old/ và đặt tên riêng nằm trong nhóm việc cuối.
-declare -A EXPERIMENT=(
-    [official]="officialdesign_walk"
-    [newsimple]="transformer_walk"
+# Thư mục log dưới logs/, có thể nhiều cái cho một robot (ngăn bởi dấu cách).
+# newsimple có HAI: run mới vào logs/newsimple/, còn model_349 nằm trong
+# logs/old/ — 96 run của nhiều task trộn lẫn từ thời cả nhóm cùng dùng chung
+# experiment_name "transformer_walk", không phân biệt được bằng tên nên không
+# tách ra được. Script tìm lần lượt theo thứ tự liệt kê.
+declare -A LOGDIRS=(
+    [official]="officialdesign"
+    [newsimple]="newsimple old"
 )
 
 declare -A ASSET=(
@@ -67,10 +67,11 @@ list_robots() {
     printf "  %-13s %-28s %s\n" "ROBOT" "LOG DIR" "GHI CHÚ"
     printf "  %-13s %-28s %s\n" "-----" "-------" "-------"
     for r in "${ORDER[@]}"; do
-        local n=0
-        [[ -d "logs/rsl_rl/${EXPERIMENT[$r]}" ]] &&
-            n=$(find "logs/rsl_rl/${EXPERIMENT[$r]}" -maxdepth 1 -mindepth 1 -type d | wc -l)
-        printf "  %-13s %-28s %s\n" "$r" "${EXPERIMENT[$r]} ($n run)" "${NOTE[$r]}"
+        local n=0 d
+        for d in ${LOGDIRS[$r]}; do
+            [[ -d "logs/$d" ]] && n=$((n + $(find "logs/$d" -maxdepth 1 -mindepth 1 -type d | wc -l)))
+        done
+        printf "  %-13s %-28s %s\n" "$r" "${LOGDIRS[$r]// //} ($n run)" "${NOTE[$r]}"
     done
     echo
     echo "  Gõ ./play.sh <robot> để xem danh sách run."
@@ -79,24 +80,27 @@ list_robots() {
 
 list_runs() {
     local robot=$1
-    local dir="logs/rsl_rl/${EXPERIMENT[$robot]}"
-    [[ -d $dir ]] || die "Chưa có log nào ở '$dir'. Robot này chưa train lần nào."
     echo
     echo "  robot : $robot"
     echo "  task  : ${TASK[$robot]}"
     echo "  asset : ${ASSET[$robot]}"
-    echo "  log   : $dir"
+    echo "  log   : ${LOGDIRS[$robot]// /, } (dưới logs/)"
     [[ -n "${EXTRA[$robot]:-}" ]] && echo "  cờ env: ${EXTRA[$robot]}"
     echo
     echo "  RUN                                ITER CÓ SẴN"
     echo "  ---                                -----------"
-    local run iters
-    while IFS= read -r run; do
-        iters=$(find "$dir/$run" -maxdepth 1 -name 'model_*.pt' 2>/dev/null |
-                sed -nE 's/.*model_([0-9]+)(_rslrl5)?\.pt$/\1/p' | sort -un | tr '\n' ' ')
-        [[ -z $iters ]] && iters="(không có checkpoint)"
-        printf "  %-34s %s\n" "$run" "$iters"
-    done < <(find "$dir" -maxdepth 1 -mindepth 1 -type d -printf '%f\n' | sort)
+    local d run iters found=0
+    for d in ${LOGDIRS[$robot]}; do
+        [[ -d "logs/$d" ]] || continue
+        while IFS= read -r run; do
+            found=1
+            iters=$(find "logs/$d/$run" -maxdepth 1 -name 'model_*.pt' 2>/dev/null |
+                    sed -nE 's/.*model_([0-9]+)(_rslrl5)?\.pt$/\1/p' | sort -un | tr '\n' ' ')
+            [[ -z $iters ]] && iters="(không có checkpoint)"
+            printf "  %-34s %s\n" "$run" "$iters"
+        done < <(find "logs/$d" -maxdepth 1 -mindepth 1 -type d -printf '%f\n' | sort)
+    done
+    (( found )) || die "Robot '$robot' chưa train lần nào."
     echo
 }
 
@@ -128,8 +132,11 @@ ROBOT=$1; shift
 [[ $# -eq 0 ]] && { list_runs "$ROBOT"; exit 0; }
 
 RUN=$1; shift
-RUN_DIR="logs/rsl_rl/${EXPERIMENT[$ROBOT]}/$RUN"
-[[ -d $RUN_DIR ]] || { echo "[LỖI] Không có run '$RUN'." >&2; list_runs "$ROBOT"; exit 1; }
+RUN_DIR=""
+for d in ${LOGDIRS[$ROBOT]}; do
+    [[ -d "logs/$d/$RUN" ]] && { RUN_DIR="logs/$d/$RUN"; break; }
+done
+[[ -n $RUN_DIR ]] || { echo "[LỖI] Không có run '$RUN'." >&2; list_runs "$ROBOT"; exit 1; }
 
 ITER=""
 if [[ $# -gt 0 && $1 =~ ^[0-9]+$ ]]; then ITER=$1; shift; fi
