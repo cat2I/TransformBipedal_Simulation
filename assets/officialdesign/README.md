@@ -87,11 +87,11 @@ Từ thư mục `isaac_rl/`:
 ./run.sh scripts/validate_officialdesign.py --headless
 ./run.sh scripts/rsl_rl/train.py --task Official-Walk-v0 --num_envs 256 --headless --max_iterations 2
 
-# Train thật; log riêng tại logs/rsl_rl/officialdesign_walk/
+# Train thật; log riêng tại logs/officialdesign/
 ./run.sh scripts/rsl_rl/train.py --task Official-Walk-v0 --num_envs 256 --headless --max_iterations 3000
 
 # Xem checkpoint mới (thay <run> và <iteration>)
-./run.sh scripts/rsl_rl/play.py --task Official-Walk-v0 --num_envs 1 --checkpoint "$PWD/logs/rsl_rl/officialdesign_walk/<run>/model_<iteration>.pt"
+./run.sh scripts/rsl_rl/play.py --task Official-Walk-v0 --num_envs 1 --checkpoint "$PWD/logs/officialdesign/<run>/model_<iteration>.pt"
 ```
 
 Không cần convert lại để chạy asset đã bàn giao. Khi cập nhật CAD/calibration:

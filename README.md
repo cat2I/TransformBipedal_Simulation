@@ -75,7 +75,7 @@ Control:
 
 ### Monitor Training
 ```bash
-tensorboard --logdir=logs/rsl_rl/transformer_walk --port=6006
+tensorboard --logdir=logs/transformer_walk --port=6006
 ```
 
 ## Inference
@@ -85,7 +85,7 @@ tensorboard --logdir=logs/rsl_rl/transformer_walk --port=6006
 ~/IsaacLab/isaac-sim/python.sh scripts/rsl_rl/play.py \
     --task NewSimple-Walk-v0 \
     --num_envs 1 \
-    --load_run logs/rsl_rl/transformer_walk/<checkpoint>
+    --load_run logs/old/<checkpoint>
 ```
 
 ### View Logs
@@ -117,7 +117,7 @@ tensorboard --logdir=logs/rsl_rl/transformer_walk --port=6006
 ### Export 1000-Step Trajectory
 ```bash
 python export_trajectory.py \
-    --checkpoint logs/rsl_rl/transformer_walk/.../model.pt \
+    --checkpoint logs/old/.../model.pt \
     --num_steps 1000 \
     --output trajectory.json
 ```
@@ -176,7 +176,7 @@ Transform_bipedal_todai/              # gốc repo
 │   │   ├── newsimple/                #     robot của model_349 (0319.gif)
 │   │   └── _shared/                  #     dùng chung mọi robot — cố tình mỏng
 │   ├── _archive/                     #   code đông lạnh, KHÔNG chạy được
-│   └── logs/rsl_rl/                  #   kết quả train (đã gitignore)
+│   └── logs/                  #   kết quả train (đã gitignore)
 │
 ├── mjc_rl/                           # MuJoCo + Stable-Baselines3 — bài toán twist recovery
 │   ├── sb3/                          #   train, test, môi trường, viewer
@@ -255,7 +255,7 @@ cd isaac_rl
 
 ```bash
 ./run.sh scripts/rsl_rl/play.py --task Transformer-Walk10DOF-Direct-v0 --num_envs 1 \
-    --checkpoint "$PWD/logs/rsl_rl/transformer_walk/2026-07-23_15-23-03/model_1499_rslrl5.pt"
+    --checkpoint "$PWD/logs/old/2026-07-23_15-23-03/model_1499_rslrl5.pt"
 ```
 
 > Lần mở cửa sổ **đầu tiên** mất khoảng **2 phút** và trông như máy treo. Đừng tắt —
@@ -269,7 +269,7 @@ cd isaac_rl
 | `Transformer-Walk10DOF-Direct-v0` | 60 | 10 |
 | `Transformer-Walk10DOF6-Direct-v0` | 44 | 6 |
 
-Các task khác trong `source/transformer_nam/transformer_nam/tasks/direct/transformer_nam/__init__.py`
+Các task khác trong `bipedal/__init__.py`
 đang comment out. Bảng đối chiếu 81 run cũ với task tương ứng: `isaac_rl/logs/README-runs.md`.
 
 **Tài liệu thêm:**

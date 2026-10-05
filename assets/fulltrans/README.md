@@ -38,7 +38,7 @@ meta/joint_names_FullForm.yaml (phía ROS, 8 khớp):
   Bubleft, Hipleft, Kneeleft, Footleft, Bubright, Hipright, Kneeright, Footright
   → chân TRÁI hết, rồi chân PHẢI
 
-Isaac (10 khớp, xem comment transformer_walk10dof_env.py):
+Isaac (10 khớp, xem comment trong `isaac_rl/_archive/fulltrans/transformer_walk10dof_env.py`):
   Bub_L, Bub_R, Hip_L, Hip_R, Twist_L, Twist_R, Knee_L, Knee_R, Foot_L, Foot_R
   → theo CẶP trái-phải
 ```

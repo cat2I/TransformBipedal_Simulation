@@ -1,4 +1,77 @@
-# Hướng dẫn tạo môi trường IsaacLab Độc lập (Direct)
+# Tạo môi trường IsaacLab Direct mới
+
+> **Lưu ý 2026-10-05.** Tài liệu gốc của Vinh (từ mục "Bản gốc" trở xuống) mô
+> tả bố cục `source/<package>/tasks/` — bố cục đó **đã bỏ**. Phần giải thích
+> *Hiệu ứng Domino* về `__init__.py` ở cuối vẫn đúng nguyên lý và rất đáng đọc.
+> Mục ngay dưới đây là quy trình áp dụng cho bố cục hiện tại.
+
+---
+
+## Quy trình hiện tại: thêm một ROBOT mới
+
+Trong bố cục này **mỗi robot một thư mục**, task nằm bên trong robot. Thêm
+robot mới là thêm một thư mục dưới `isaac_rl/bipedal/`:
+
+```text
+isaac_rl/bipedal/
+├── __init__.py          <-- thêm 1 dòng: from . import <robot_moi>
+├── _shared/             <-- dùng chung, ĐỪNG phình to
+└── <robot_moi>/
+    ├── __init__.py        gym.register("<Robot>-<Task>-v0")
+    ├── robot.py           ArticulationCfg: USD, actuator, pose, giới hạn khớp
+    ├── task_walk.py       env: obs / action / reward / termination / reset
+    └── ppo.py             siêu tham số; experiment_name = "<robot_moi>"
+```
+
+### Các bước
+
+1. **Đặt asset** vào `assets/<robot_moi>/usd/`. Không để trong `isaac_rl/` —
+   `mjc_rl/` và `inspect/` cũng đọc chung thư mục `assets/`.
+
+2. **`robot.py`** — chép từ `bipedal/officialdesign/robot.py` làm mẫu. Nó đọc
+   thông số từ `meta/calibration.json` thay vì viết cứng trong Python, và kiểm
+   SHA-256 để không train nhầm với config lệch USD.
+
+3. **`task_walk.py`** — chép từ robot gần nhất. Sửa đường dẫn import:
+   `from .._shared.lab3 import as_torch` và `from .robot import <CFG>`.
+
+4. **`ppo.py`** — kế thừa `.._shared.ppo` và **bắt buộc** đặt
+   `experiment_name = "<robot_moi>"`. Quên là log rơi vào
+   `logs/_chua_dat_ten/`, dấu hiệu để phát hiện.
+
+5. **`<robot_moi>/__init__.py`** — `gym.register`, `entry_point` dùng
+   `f"{__name__}.task_walk:<Class>"` để tự khớp khi đổi chỗ thư mục.
+
+6. **`bipedal/__init__.py`** — thêm `from . import <robot_moi>`.
+   **Bước này KHÔNG được quên** — xem phần Hiệu ứng Domino ở cuối tài liệu.
+
+7. **`play.sh`** — thêm một dòng vào mỗi mảng `ORDER`, `TASK`, `LOGDIRS`,
+   `ASSET`, `NOTE` (và `EXTRA` nếu cần cờ env riêng). Cập nhật `play.md`.
+
+8. **Nghiệm thu:**
+   ```bash
+   ./run.sh scripts/list_envs.py                                   # task có trong bảng?
+   ./run.sh scripts/rsl_rl/train.py --task <Robot>-<Task>-v0 \
+            --num_envs 256 --headless --max_iterations 2           # exit 0?
+   ```
+
+### Khác với tài liệu gốc
+
+| Bản gốc (Vinh) | Hiện tại |
+|---|---|
+| Package riêng trong `source/` | Một thư mục con trong `bipedal/` |
+| `tasks/__init__.py` đăng ký | `<robot>/__init__.py` đăng ký |
+| `import_packages` tự quét | `bipedal/__init__.py` import **tường minh** |
+| Chép `_asset_paths.py`, `_lab3_compat.py` vào package mới | Dùng chung `bipedal/_shared/` |
+
+Vì sao bỏ bộ quét tự động: nó lọc blacklist theo **chuỗi con**
+(`any(b in name for b in ["utils", ".mdp"])`), nên thư mục tên chứa `"utils"`
+bị bỏ qua **im lặng** — task biến mất mà không có lỗi nào.
+
+---
+# Bản gốc — Vinh, trước 2026-10-05
+
+## Hướng dẫn tạo môi trường IsaacLab Độc lập (Direct)
 
 Tài liệu này hướng dẫn cách tạo một package môi trường hoàn toàn mới, kế thừa từ môi trường 10DOF cũ nhưng tách biệt để có thể thoải mái tinh chỉnh vật lý (stiffness, mass, v.v.) mà không làm hỏng mô hình đã train.
 

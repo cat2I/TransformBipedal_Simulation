@@ -2,8 +2,8 @@
 
 Người lập: Claude (Tech Lead). Cập nhật: 2026-10-02.
 Robot: OFFICIALdesign, 10 DOF. Task `Official-Walk-v0`.
-File code chính: `official_env.py`, `official_config.py`, `agents/official_ppo_cfg.py`
-(cùng thư mục `isaac_rl/source/transformer_nam/transformer_nam/tasks/direct/transformer_nam/`).
+File code chính: `bipedal/officialdesign/task_walk.py`, `bipedal/officialdesign/robot.py`, `bipedal/officialdesign/ppo.py`
+(cùng thư mục `isaac_rl/bipedal/`).
 
 > File này đã gộp toàn bộ `docs/RL_CONFIG.md` cũ (rà soát 2026-08-16, viết cho env 10DOF cũ). Nội dung dùng được đã cập nhật theo env mới. Mẫu code config rsl_rl nằm ở **Phụ lục A**, lỗi riêng của env cũ ở **Phụ lục B**. Bản gốc RL_CONFIG.md vẫn lấy lại được từ git.
 
@@ -15,9 +15,9 @@ File code chính: `official_env.py`, `official_config.py`, `agents/official_ppo_
 
 | Tầng | Ví dụ | Câu hỏi nó trả lời | Sửa ở đâu |
 |---|---|---|---|
-| **1. Cách học** | Phương pháp học: mỗi lần sửa một chút, có thầy chấm điểm | Mạng nơ-ron cập nhật thế nào? | `agents/official_ppo_cfg.py` (config rsl_rl) |
-| **2. Bài tập** | Tập gì, có bánh phụ không, làm đúng được khen gì | Robot thấy gì, ra lệnh gì, được thưởng vì cái gì? | `official_env.py`: obs / action / reward |
-| **3. Sân tập giống sân thật** | Sân có dốc, có gió, xe hơi rơ y như đường thật | Policy học trong sim có dùng được ngoài đời không? | `official_env.py` (DR, delay, IMU) + code trên Pi |
+| **1. Cách học** | Phương pháp học: mỗi lần sửa một chút, có thầy chấm điểm | Mạng nơ-ron cập nhật thế nào? | `bipedal/officialdesign/ppo.py` (config rsl_rl) |
+| **2. Bài tập** | Tập gì, có bánh phụ không, làm đúng được khen gì | Robot thấy gì, ra lệnh gì, được thưởng vì cái gì? | `bipedal/officialdesign/task_walk.py`: obs / action / reward |
+| **3. Sân tập giống sân thật** | Sân có dốc, có gió, xe hơi rơ y như đường thật | Policy học trong sim có dùng được ngoài đời không? | `bipedal/officialdesign/task_walk.py` (DR, delay, IMU) + code trên Pi |
 
 Tầng 1 **không biết gì về robot**: cùng một config dùng được cho robot 4 chân. Tầng 2 và tầng 3 là nơi đặc thù của robot này.
 
@@ -200,7 +200,7 @@ Tổng reward nhân với `step_dt`.
 ### 2.2.1 `swing` đang thưởng NGƯỢC với dáng đi
 
 Số hạng `+0.15 swing` ở bảng trên không trung lập với dáng đi — nó nghiêng về
-phía nhảy. Code hiện tại (`official_env.py`, trong `_get_rewards`):
+phía nhảy. Code hiện tại (`bipedal/officialdesign/task_walk.py`, trong `_get_rewards`):
 
 ```python
 swing = ((~touching) * torch.exp(-((sole_height - 0.035)/0.025)**2)).mean(-1)
@@ -224,8 +224,9 @@ không chặn.
 
 ### 2.2.2 `march_alt` — bản vá 3 dòng
 
-Nhặt từ `transformer_hieu_env.py` (env "Twist + March" của Hiếu, đã xoá khỏi
-repo 2026-10; tra lại bằng `git log --all -- "*transformer_hieu_env.py"`).
+Nhặt từ env "Twist + March" của Hiếu, nay ở
+`isaac_rl/_archive/newsimple/transformer_hieu_env.py` (đóng băng 2026-10-05,
+không chạy được vì relative import gãy — chỉ để đọc).
 Hiếu cho nó trọng số 2.0 — hạng mục chính, không phải phụ.
 
 ```python
@@ -595,9 +596,9 @@ cd isaac_rl
 ./run.sh scripts/rsl_rl/train.py --task Official-Walk-v0 --headless --num_envs 4096
 # Play
 ./run.sh scripts/rsl_rl/play.py --task Official-Walk-v0 --num_envs 1 \
-    --checkpoint "$PWD/logs/rsl_rl/officialdesign_walk/<run>/model_<N>.pt"
+    --checkpoint "$PWD/logs/officialdesign/<run>/model_<N>.pt"
 # TensorBoard
-tensorboard --logdir=logs/rsl_rl/officialdesign_walk --port=6006
+tensorboard --logdir=logs/officialdesign_walk --port=6006
 ```
 
 | Muốn | Sửa |
@@ -737,7 +738,9 @@ Mẫu: `~/IsaacLab/source/isaaclab_tasks/isaaclab_tasks/manager_based/locomotion
 
 ---
 
-# Phụ lục B — Lỗi riêng của env 10DOF cũ (`transformer_walk10dof_env.py`)
+# Phụ lục B — Lỗi riêng của env 10DOF cũ
+
+(nay ở `isaac_rl/_archive/fulltrans/transformer_walk10dof_env.py`)
 
 Chỉ cần nếu train lại robot cũ. Env mới đã né hoặc không có các lỗi này (mục 4).
 

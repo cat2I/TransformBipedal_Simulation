@@ -40,13 +40,13 @@ cd ~/Documents/projects/Transformer/Transform_bipedal_todai/isaac_rl
     --headless --num_envs 4096 --max_iterations 3
 ```
 
-> ⚠️ Env mới đặt `num_envs=256` trong code (`official_env.py:43`), nên **phải truyền `--num_envs 4096`**. Con số 4096 đo trên env cũ (mục 6). Robot mới có số link tương tự, nhưng nên đo lại một lần.
+> ⚠️ Env mới đặt `num_envs=256` trong code (`bipedal/officialdesign/task_walk.py:43`), nên **phải truyền `--num_envs 4096`**. Con số 4096 đo trên env cũ (mục 6). Robot mới có số link tương tự, nhưng nên đo lại một lần.
 
 **Robot cũ (10DOF): play policy tốt nhất hiện có, có cửa sổ**
 
 ```bash
 ./run.sh scripts/rsl_rl/play.py --task Transformer-Walk10DOF-Direct-v0 --num_envs 1 \
-    --checkpoint "$PWD/logs/rsl_rl/transformer_walk/2026-07-23_15-23-03/model_1499_rslrl5.pt"
+    --checkpoint "$PWD/logs/old/2026-07-23_15-23-03/model_1499_rslrl5.pt"
 ```
 
 Không cần thêm cờ: cửa sổ tự mở, tốc độ tự đúng thời gian thật. Lần đầu sau khi bật máy mất khoảng **2 phút**, những lần sau khoảng **23 giây** (mục 7).
@@ -57,7 +57,8 @@ Không cần thêm cờ: cửa sổ tự mở, tốc độ tự đúng thời gi
 - đặt biến môi trường cho GPU 6 GB;
 - dùng `isaac-run` nếu đã cài.
 
-`run_direct.sh` và `isaaclab.sh` chỉ chuyển tiếp sang `run.sh`.
+`run_direct.sh` và `isaaclab.sh` đã xoá (2026-10-05) — cả hai chỉ là một dòng
+`exec run.sh "$@"`. Giờ chỉ còn `run.sh`, và `play.sh` để phát lại checkpoint.
 
 > **Khác nhau cơ bản giữa train và play:**
 > - Train luôn `--headless` (nhanh, tiết kiệm VRAM).
@@ -99,11 +100,17 @@ isaacsim-kernel     yêu cầu coverage==7.4.4 (đang có 7.6.1)
 
 | Task | obs | act | File env | Ghi chú |
 |---|---:|---:|---|---|
-| `Official-Walk-v0` | 60 | 10 | `official_env.py` | **Robot mới.** Log ở `logs/rsl_rl/officialdesign_walk/` |
-| `Transformer-Walk10DOF-Direct-v0` | 60 | 10 | `transformer_walk10dof_env.py` | Robot cũ, đủ 10 khớp |
-| `Transformer-Walk10DOF6-Direct-v0` | 44 | 6 | `transformer_walk10dof6_env.py` | Robot cũ, RL chỉ điều khiển 6 khớp |
+| `Official-Walk-v0` | 60 | 10 | `bipedal/officialdesign/task_walk.py` | **Robot mới.** Log ở `logs/officialdesign/` |
+| `NewSimple-Walk-v0` | 44 | 6 | `bipedal/newsimple/task_walk.py` | Robot của `model_349` (0319.gif). Log ở `logs/newsimple/` + `logs/old/` |
 
-Các file env nằm ở `isaac_rl/source/transformer_nam/transformer_nam/tasks/direct/transformer_nam/`. Đăng ký task ở `__init__.py` cùng thư mục. Các task khác đang bị comment out.
+Mỗi robot một thư mục dưới `isaac_rl/bipedal/`, task đăng ký trong
+`__init__.py` của chính robot đó.
+
+Ba task fulltrans (`Walk10DOF`, `Walk10DOF6`, `StandUp`) đã đóng băng vào
+`isaac_rl/_archive/fulltrans/` ngày 2026-10-05: không policy nào biết đi (tốt
+nhất ep_len 83.1/200), và chúng dùng hai giao diện khác nhau (60/10 và 44/6)
+trên cùng một asset. Code ở `_archive/` **không chạy được** — relative import
+gãy khi ra khỏi package.
 
 Bảng đối chiếu 81 run cũ với task tương ứng: `isaac_rl/logs/README-runs.md` (tóm tắt ở mục 5).
 
@@ -124,7 +131,7 @@ Run tốt nhất ngã ở giây thứ 4.2 trên 10. Trên asset thật, 10DOF đ
 
 Mọi thứ nằm trong **một file env** ứng với task bạn dùng.
 
-#### Env mới: `official_env.py`
+#### Env mới: `bipedal/officialdesign/task_walk.py`
 
 | Muốn sửa gì | Ở đâu |
 |---|---|
@@ -135,7 +142,7 @@ Mọi thứ nằm trong **một file env** ứng với task bạn dùng.
 
 Ở env mới, **hệ số là hệ số thật**: mỗi số nhân trực tiếp với thành phần của nó. Tăng một số thì chỉ thành phần đó mạnh lên. Bảng đầy đủ các thành phần xem ở `ALGO.md` mục 2.2.
 
-#### Env cũ: `transformer_walk10dof_env.py` / `transformer_walk10dof6_env.py`
+#### Env fulltrans cũ (nay ở `isaac_rl/_archive/fulltrans/`, không chạy được)
 
 | Muốn sửa gì | Dòng (10DOF) | Dòng (6DOF) |
 |---|---|---|
@@ -186,7 +193,7 @@ robot_root_pos = as_torch(self.robot.data.root_pos_w)
 robot_root_pos = self.robot.data.root_pos_w
 ```
 
-`as_torch` nhập từ `._lab3_compat`, đã có sẵn ở đầu mỗi file env. Jit cũng **không nhận** `Optional`, `dict` hay kiểu động. Tham số nào không phải Tensor thì phải chú thích rõ kiểu (`action: str`, `target_h: float`).
+`as_torch` nhập từ `.._shared.lab3`, đã có sẵn ở đầu mỗi file env. Jit cũng **không nhận** `Optional`, `dict` hay kiểu động. Tham số nào không phải Tensor thì phải chú thích rõ kiểu (`action: str`, `target_h: float`).
 
 **Bẫy 3 (mọi env): đổi số chiều obs hoặc action là mất hết checkpoint cũ.**
 - Mạng nơ-ron sẽ sai kích thước. Đây không phải lỗi: chấp nhận train lại từ đầu, hoặc giữ nguyên số chiều.
@@ -197,7 +204,7 @@ robot_root_pos = self.robot.data.root_pos_w
 Isaac Sim mất khoảng 40 giây để khởi động. Đừng để nó khởi động xong mới báo lỗi thụt lề.
 
 ```bash
-python -m py_compile source/transformer_nam/transformer_nam/tasks/direct/transformer_nam/*.py && echo OK
+python -m py_compile bipedal/*.py && echo OK
 cd .. && git diff --stat && cd isaac_rl     # soát lại thay đổi
 ```
 
@@ -236,7 +243,7 @@ Nếu ra `nan` mà không thấy lỗi, tăng dần `--max_iterations` để tì
 - `num_envs`: env cũ mặc định đã là 4096. Env mới phải truyền `--num_envs 4096`.
 - Muốn nhanh thêm khoảng 10%: đóng hết ứng dụng rồi dùng `--num_envs 8192`. Trên 8192 không nhanh thêm (mục 6).
 - **Thời gian:** 41 304 steps/s ở 4096 env, khoảng **2.3 giây mỗi vòng**, nên 1500 vòng ≈ **1 giờ**.
-- Checkpoint tự lưu mỗi 50 vòng vào `logs/rsl_rl/<experiment>/<ngày-giờ>/model_<N>.pt`.
+- Checkpoint tự lưu mỗi 50 vòng vào `logs/<experiment>/<ngày-giờ>/model_<N>.pt`.
 
 > **Khi resume:** vòng đầu `mean_episode_length` **tụt mạnh** rồi mới leo lại (ví dụ 83 → 24 → 70 sau 10 vòng).
 > Nguyên nhân: `init_at_random_ep_len=True` trong `train.py`, cộng với Adam (thuật toán tối ưu) khởi động lại từ trạng thái trống. Cả hai tự hết sau khoảng 10 vòng.
@@ -249,7 +256,7 @@ Mở **terminal thứ hai**:
 ```bash
 source ~/miniconda3/etc/profile.d/conda.sh && conda activate isaacsim
 cd ~/Documents/projects/Transformer/Transform_bipedal_todai/isaac_rl
-tensorboard --logdir=logs/rsl_rl/<experiment> --port=6006
+tensorboard --logdir=logs/<experiment> --port=6006
 ```
 
 `<experiment>` là `officialdesign_walk` (robot mới) hoặc `transformer_walk` (robot cũ). Mở trình duyệt vào `http://localhost:6006`.
@@ -268,7 +275,7 @@ tensorboard --logdir=logs/rsl_rl/<experiment> --port=6006
 
 ```bash
 ./run.sh scripts/rsl_rl/play.py --task <TASK> --num_envs 1 \
-    --checkpoint "$PWD/logs/rsl_rl/<experiment>/<run>/model_<N>.pt"
+    --checkpoint "$PWD/logs/<experiment>/<run>/model_<N>.pt"
 ```
 
 - Tự mở cửa sổ và chạy đúng thời gian thật.
@@ -306,15 +313,15 @@ Hai chân `air` cùng tăng = robot đang nhảy. Cả hai cùng 0 = đang đứ
 > ```
 > `play.py` cũ viết cứng index 2 và 7, tức là Hipleft và Kneeright, không phải hai khớp xoay. **Đừng dùng log cũ để đánh giá chuyển động xoay.** Đã sửa: giờ tra theo tên và in `Twistleft=[4] Twistright=[5]` lúc khởi động.
 
-Env mới in thứ tự khớp và chỉ số Isaac lúc khởi động (`official_env.py:104-105`). Hãy đối chiếu dòng đó mỗi khi đổi asset.
+Env mới in thứ tự khớp và chỉ số Isaac lúc khởi động (`bipedal/officialdesign/task_walk.py:104-105`). Hãy đối chiếu dòng đó mỗi khi đổi asset.
 
 ### Bước 7. Xuất policy cho robot thật
 
 `play.py` **tự động** xuất khi chạy:
 
 ```
-logs/rsl_rl/<experiment>/<run>/exported/policy.pt     ← TorchScript
-logs/rsl_rl/<experiment>/<run>/exported/policy.onnx   ← ONNX (dùng trên Pi)
+logs/<experiment>/<run>/exported/policy.pt     ← TorchScript
+logs/<experiment>/<run>/exported/policy.onnx   ← ONNX (dùng trên Pi)
 ```
 
 Hai file này là mạng đã đóng gói, chạy không cần Isaac Sim.
@@ -331,11 +338,11 @@ Tất cả chạy từ `isaac_rl/`.
 | Train robot mới | `./run.sh scripts/rsl_rl/train.py --task Official-Walk-v0 --headless --num_envs 4096 --max_iterations 3000` |
 | Train robot cũ | `./run.sh scripts/rsl_rl/train.py --task Transformer-Walk10DOF-Direct-v0 --headless --max_iterations 1500` |
 | Train tiếp | thêm `--resume --load_run <thư-mục> --checkpoint <tên-file>` |
-| Play (có cửa sổ) | `./run.sh scripts/rsl_rl/play.py --task <TASK> --num_envs 1 --checkpoint "$PWD/logs/rsl_rl/<exp>/<run>/model_<N>.pt"` |
+| Play (có cửa sổ) | `./run.sh scripts/rsl_rl/play.py --task <TASK> --num_envs 1 --checkpoint "$PWD/logs/<exp>/<run>/model_<N>.pt"` |
 | Play không cửa sổ | thêm `--headless` |
-| TensorBoard | `tensorboard --logdir=logs/rsl_rl/<exp> --port=6006` |
-| Chuyển checkpoint cũ sang định dạng mới | `./run.sh scripts/convert_checkpoint_rslrl5.py logs/rsl_rl/transformer_walk/<run>` |
-| Kiểm tra cú pháp | `python -m py_compile source/transformer_nam/transformer_nam/tasks/direct/transformer_nam/*.py` |
+| TensorBoard | `tensorboard --logdir=logs/<exp> --port=6006` |
+| Chuyển checkpoint cũ sang định dạng mới | `./run.sh scripts/convert_checkpoint_rslrl5.py logs/old/<run>` |
+| Kiểm tra cú pháp | `python -m py_compile bipedal/*.py` |
 | Xem CPU/RAM/swap | `isaac-perf status` |
 | Xem run nào dùng task nào | `cat logs/README-runs.md` |
 | Soát thay đổi | `cd .. && git diff` |
@@ -351,7 +358,7 @@ Tất cả chạy từ `isaac_rl/`.
 - Kiến trúc mạng không đổi, chỉ khác tên khóa, nên chuyển đổi được:
 
 ```bash
-./run.sh scripts/convert_checkpoint_rslrl5.py logs/rsl_rl/transformer_walk/<tên-run>
+./run.sh scripts/convert_checkpoint_rslrl5.py logs/old/<tên-run>
 ```
 
 File gốc giữ nguyên, bản mới ghi ra `<tên>_rslrl5.pt` bên cạnh.
@@ -362,7 +369,7 @@ File gốc giữ nguyên, bản mới ghi ra `<tên>_rslrl5.pt` bên cạnh.
 
 ### 5.2 Đã kiểm chứng: checkpoint cũ còn nguyên giá trị
 
-**Câu hỏi:** IsaacLab 3.0 đổi quy ước quaternion từ `(w,x,y,z)` sang `(x,y,z,w)` và đổi sensor IMU. Nếu lớp bù trong `_lab3_compat.py` sai thì cả 488 file là rác.
+**Câu hỏi:** IsaacLab 3.0 đổi quy ước quaternion từ `(w,x,y,z)` sang `(x,y,z,w)` và đổi sensor IMU. Nếu lớp bù trong `bipedal/_shared/lab3.py` sai thì cả 488 file là rác.
 
 **Thí nghiệm đối chứng:** hai lần train 10 vòng, cùng `--num_envs 4096`, chỉ khác có `--resume` hay không.
 
@@ -450,7 +457,7 @@ Bản mới lưu state ở `/var/lib/isaac-perf.state` (sống qua reboot), bỏ
 
 ### 6.3 Buffer PhysX đã cắt
 
-Đặt trong `SimulationCfg(physics=PhysxCfg(...))` của các file env, **kể cả `official_env.py`**. Cắt buffer tiết kiệm **1650 MiB ở mọi mức `num_envs`**, vì đó là cấp phát cố định.
+Đặt trong `SimulationCfg(physics=PhysxCfg(...))` của các file env, **kể cả `bipedal/officialdesign/task_walk.py`**. Cắt buffer tiết kiệm **1650 MiB ở mọi mức `num_envs`**, vì đó là cấp phát cố định.
 
 | Tham số | Mặc định | Đặt lại | Lý do |
 |---|---|---|---|
@@ -538,7 +545,7 @@ Các lỗi này đã gặp thật và đã sửa. Gặp lại thì tra bảng tr
 | Log bình thường **nhưng không mở cửa sổ** | IsaacLab 3.0 đảo mặc định | `play.py` đã tự thêm `--viz kit`. Script khác thì tự truyền cờ đó (7.2) |
 | *"Isaac Lab is not responding"* lặp lại | GNOME timeout 5 giây | `gsettings set org.gnome.mutter check-alive-timeout 0` (7.4) |
 | Cửa sổ mở, log chạy, **khung 3D đen** | `--rendering_mode performance` | Bỏ cờ đó (7.3) |
-| `ImportError: cannot import name 'as_torch'` | Ai đó xóa `as_torch` khỏi `_lab3_compat.py` | Khôi phục hàm, **đừng** xóa dòng import |
+| `ImportError: cannot import name 'as_torch'` | Ai đó xóa `as_torch` khỏi `bipedal/_shared/lab3.py` | Khôi phục hàm, **đừng** xóa dòng import |
 | Lỗi kiểu dữ liệu lạ trong hàm `@torch.jit.script` | `ProxyArray` lọt vào jit | Bọc `as_torch(...)` (Bẫy 2, mục 3) |
 | `KeyError: 'actor_state_dict'` | Checkpoint rsl_rl < 4.0 | `convert_checkpoint_rslrl5.py` (5.1) |
 | `'PPO' object has no attribute 'actor_critic'` | Code viết cho rsl_rl < 4.0 | Dùng `runner.alg.get_policy()` |
@@ -561,7 +568,7 @@ Sao lưu toàn bộ code trước khi sửa: `isaac_rl/.backup_truoc_khi_sua_202
 | Đổi cái gì | Hậu quả | Sửa thế nào |
 |---|---|---|
 | `robot.data.*` trả `ProxyArray` | Không lọt qua `@torch.jit.script` | Bọc `as_torch()` ở 56 chỗ trong 7 file |
-| Quaternion đổi `(w,x,y,z)` → `(x,y,z,w)` | Góc nghiêng tính sai hoàn toàn | Sửa `quaternion_to_euler`, thêm cờ bù trong `_lab3_compat.py` |
+| Quaternion đổi `(w,x,y,z)` → `(x,y,z,w)` | Góc nghiêng tính sai hoàn toàn | Sửa `quaternion_to_euler`, thêm cờ bù trong `bipedal/_shared/lab3.py` |
 | Sensor IMU mất `quat_w` | Không đọc được hướng thân | Hàm bù `imu_quat_w()` |
 | `PhysxCfg` chuyển sang `isaaclab_physx` | Import cũ gãy | `from isaaclab_physx.physics import PhysxCfg` |
 | Mặc định cửa sổ bị đảo | Bỏ `--headless` không còn hiện cửa sổ | `play.py` tự gán `--viz kit` |
@@ -588,9 +595,9 @@ Project vốn chạy trên workstation `tatung-HP-Z4-G4`.
 | `${HOME}/IsaacLab/isaac-sim/python.sh` | Không tồn tại (cài bằng pip) |
 | `conda activate isaaclab` | Env tên `isaacsim` |
 | `python3.11/site-packages` | Env chạy Python 3.12 |
-| `run.sh` / `run_direct.sh` / `isaaclab.sh` trỏ đường dẫn chết | Viết lại, gom về `run.sh` |
+| `run.sh` / `run_direct.sh` / `isaaclab.sh` trỏ đường dẫn chết | Viết lại `run.sh`; xoá hai file kia (2026-10) |
 
-> **Bài học:** số nào không tự đo trên máy mình thì đừng tin. `num_envs=512` không sai, nó đúng cho máy khác. Hằng số nào ảnh hưởng hiệu năng mà không kèm phép đo thì hãy nghi ngờ. (Áp dụng ngay: `num_envs=256` trong `official_env.py` cũng chưa được đo.)
+> **Bài học:** số nào không tự đo trên máy mình thì đừng tin. `num_envs=512` không sai, nó đúng cho máy khác. Hằng số nào ảnh hưởng hiệu năng mà không kèm phép đo thì hãy nghi ngờ. (Áp dụng ngay: `num_envs=256` trong `bipedal/officialdesign/task_walk.py` cũng chưa được đo.)
 
 ### Nhóm D. Cấu hình chưa bao giờ được đo
 
@@ -598,7 +605,7 @@ Project vốn chạy trên workstation `tatung-HP-Z4-G4`.
 |---|---|---|
 | Buffer PhysX mặc định | Thiết kế cho bài manipulation (tay máy gắp vật) với hàng nghìn tiếp xúc | Tiết kiệm 1650 MiB |
 | `isaac-perf` ghi thẳng `platform_profile` | Ghi đè lẫn nhau với `power-profiles-daemon` | Đi qua `powerprofilesctl`, state ở `/var/lib` |
-| `from .ui_extension_example import *` | `import transformer_nam` gãy ngoài SimulationApp | Bỏ dòng import (boilerplate không dùng) |
+| `from .ui_extension_example import *` | `import transformer_nam` gãy ngoài SimulationApp | Bỏ dòng import; file đã xoá hẳn (2026-10) |
 | `outputs/` 15 MB rác hydra, run rỗng | — | Xóa |
 
 > **Bài học:** giá trị mặc định là phỏng đoán của người viết thư viện cho trường hợp trung bình, không phải giá trị tối ưu cho bài của bạn.

@@ -30,7 +30,7 @@ file là vỡ tham chiếu, và vì USD là nhị phân nên git sẽ **không**
 ## Code lấy asset thế nào
 
 Qua `asset_path("<tên file>")` trong
-[`_asset_paths.py`](../transformer_nam/source/transformer_nam/transformer_nam/tasks/direct/transformer_nam/_asset_paths.py).
+[`bipedal/_shared/paths.py`](../transformer_nam/bipedal/_asset_paths.py).
 Hàm này nhận **tên file**, tự dò trong `assets/*/usd/`. Không hard-code đường dẫn ở config.
 
 ## Ranh giới: cái gì thuộc về đây, cái gì không

@@ -80,7 +80,7 @@ Control:
 
 ### Monitor Training
 ```bash
-tensorboard --logdir=logs/rsl_rl/transformer_walk --port=6006
+tensorboard --logdir=logs/transformer_walk --port=6006
 ```
 
 ## Inference
@@ -90,7 +90,7 @@ tensorboard --logdir=logs/rsl_rl/transformer_walk --port=6006
 ~/IsaacLab/isaac-sim/python.sh scripts/rsl_rl/play.py \
     --task NewSimple-Walk-v0 \
     --num_envs 1 \
-    --load_run logs/rsl_rl/transformer_walk/<checkpoint>
+    --load_run logs/old/<checkpoint>
 ```
 
 ### View Logs
@@ -122,7 +122,7 @@ tensorboard --logdir=logs/rsl_rl/transformer_walk --port=6006
 ### Export 1000-Step Trajectory
 ```bash
 python export_trajectory.py \
-    --checkpoint logs/rsl_rl/transformer_walk/.../model.pt \
+    --checkpoint logs/old/.../model.pt \
     --num_steps 1000 \
     --output trajectory.json
 ```
@@ -181,7 +181,7 @@ Transform_bipedal_todai/              # gốc repo
 │   │   ├── newsimple/                #     robot của model_349 (0319.gif)
 │   │   └── _shared/                  #     dùng chung mọi robot — cố tình mỏng
 │   ├── _archive/                     #   code đông lạnh, KHÔNG chạy được
-│   └── logs/rsl_rl/                  #   kết quả train (đã gitignore)
+│   └── logs/                  #   kết quả train (đã gitignore)
 │
 ├── mjc_rl/                           # MuJoCo + Stable-Baselines3 — bài toán twist recovery
 │   ├── sb3/                          #   train, test, môi trường, viewer
@@ -237,9 +237,13 @@ Transform_bipedal_todai/              # gốc repo
 
 ### Code Formatting
 ```bash
-pip install pre-commit
-pre-commit run --all-files
+pip install ruff
+ruff check --fix isaac_rl/bipedal isaac_rl/scripts
+ruff format isaac_rl/bipedal isaac_rl/scripts
 ```
+Cấu hình ở `isaac_rl/pyproject.toml`. Hook `pre-commit` đã bỏ (2026-10): nó
+trỏ `.github/LICENSE_HEADER.txt` — file không tồn tại — nên chưa bao giờ chạy
+được, và `.git/hooks/pre-commit` cũng chưa từng được cài.
 
 ## References
 
