@@ -1,5 +1,118 @@
 # PLAN.md — Áp config đã đi bộ được (bản Isaac cũ) vào env chạy IsaacLab 3.0
 
+## Công việc mới — B5a Gait clock kiểu Siekmann cho OFFICIALdesign (2026-10-08)
+
+Người lập: Claude (Tech Lead). Người thực thi: Vinh (tự code, Claude review diff).
+Nhánh: `vinh_dev`. Tham chiếu: `docs/ALGO.md` §2.3–2.4, `docs/gait-clock-rl-thao-luan.md`,
+`isaac_rl/bipedal/officialdesign/gaitclockref/` (code apex gốc + `RLdiscuss.md`).
+
+### Quyết định đã chốt (user, 2026-10-08)
+1. **Reward theo pha = Siekmann**: hệ số đồng hồ (spline PCHIP, ∈[−1,1]) × lực/tốc độ bàn chân.
+   Không làm XNOR. Không làm quỹ đạo mẫu (B5b để sau).
+2. **Đồng hồ nằm trong `interface.py`** (hợp đồng sim ↔ nhúng). Obs **60 → 62** cho mọi task.
+   Reward theo pha nằm trong `task_walk.py`.
+3. **Đứng yên: hoãn.** Lệnh vẫn cố định +x 0.15 m/s, không thêm lệnh vào obs.
+
+### Phạm vi
+Được sửa/tạo:
+- `isaac_rl/bipedal/officialdesign/interface.py` — đồng hồ + 2 ô obs.
+- `isaac_rl/bipedal/officialdesign/gait_clock.py` — **file mới**: dựng bảng hệ số đồng hồ (torch).
+- `isaac_rl/bipedal/officialdesign/task_walk.py` — reward theo pha, bỏ số hạng `swing`.
+- `isaac_rl/bipedal/officialdesign/ppo.py` — chỉ `experiment_name`.
+- `isaac_rl/scripts/validate_officialdesign.py` — chỉ chỗ ghi cứng `60`.
+- `isaac_rl/scripts/check_gait_clock.py` — **file mới**: kiểm tra offline bảng đồng hồ.
+- `docs/ALGO.md` — chỉ tick B5a và ghi quyết định đã chốt ở §2.4.1.
+
+**Cấm:** sửa `gaitclockref/` (đó là tài liệu tham chiếu, giữ nguyên bản gốc apex).
+**Cấm:** `import` bất cứ thứ gì từ `gaitclockref/` (file đó import `cassie`, `matplotlib`, sẽ gãy).
+Cấm đụng action, framestack, actuator delay, DR, PPO hyperparameter.
+
+---
+
+### Việc 0 — Tính chu kỳ `T` trước khi code (giấy bút, không code)
+Lý do: khớp chỉ đổi tối đa `action_step_deg × 20 Hz = 40°/s`. Chọn `T` quá ngắn → robot không theo kịp lịch → bị phạt mãi, học tệ (ALGO §2.3.1 mục 3).
+- Ước lượng góc Knee + Hip cần gập rồi duỗi để nhấc bàn chân ~3 cm.
+- `t_swing_min = (góc gập + góc duỗi) / 40°/s`. Với lịch 4 pha, một chân vung trong `swing_ratio × T`.
+- Ghi kết quả vào comment cạnh `gait_period_s` kèm `TODO: thay bằng tốc độ servo đo ở A1`.
+- [ ] AC0.1: `gait_period_s` và `swing_ratio` có comment ghi phép tính, không phải số chọn bừa.
+  (Gợi ý điểm xuất phát: `T = 1.0 s`, `swing_ratio = 0.35` → chống kép `0.15` mỗi lần.)
+
+### Việc 1 — `gait_clock.py`: port `phase_function.py` sang dạng dùng được trên GPU
+Ý tưởng: **không** viết lại PCHIP bằng torch. Lúc khởi tạo, dùng scipy PCHIP tính sẵn
+hệ số tại N điểm pha (bảng tra, LUT) → đưa lên GPU. Lúc chạy chỉ tra bảng theo chỉ số.
+Lý do: PCHIP chỉ cần tính 1 lần; tra bảng thì vector hoá cho 4096 env miễn phí.
+
+Yêu cầu:
+- Trục x là **pha chuẩn hoá `p ∈ [0,1)`**, không dùng `FREQ`/giây như apex.
+  Lịch 4 pha: phải-vung `[0, s]` → chống kép `[s, 0.5]` → trái-vung `[0.5, 0.5+s]` → chống kép `[0.5+s, 1]`, với `s = swing_ratio`.
+- Giữ 3 tham số của apex: `strict_relaxer`, `stance_mode` (`grounded`/`aerial`/`zero`), `have_incentive`.
+- Nối 3 chu kỳ (trước–hiện tại–sau) trước khi nội suy, dịch **đúng 1 chu kỳ** (= 1.0 với trục chuẩn hoá).
+- Trả về tensor `(4, N)` theo thứ tự cố định `[r_frc, r_vel, l_frc, l_vel]`, kèm hàm tra `(num_envs,) pha → (num_envs, 4)`.
+- Docstring ghi rõ: dấu −1 phạt / 0 kệ / +1 thưởng, nguồn apex, và vì sao dùng LUT.
+- ⚠️ Trước khi port, so sánh nhánh `grounded` + `have_incentive=False` của **chống kép thứ nhất** (`gaitclockref/phase_function.py` dòng 70–72) với **chống kép thứ hai** (dòng 110–112). Lẽ ra hai khối giống nhau, chỉ khác cột. **Tự tìm chỗ khác**, đừng chép nguyên. AC1.6 sẽ bắt lỗi này.
+
+- [ ] AC1.1: Không import `gaitclockref`, không import `matplotlib`. scipy chỉ dùng lúc dựng bảng.
+- [ ] AC1.2: Mọi giá trị bảng ∈ [−1, 1] (PCHIP không vọt lố).
+- [ ] AC1.3: Tuần hoàn: giá trị tại `p=0` ≈ giá trị tại `p→1` (sai < 1e-3).
+- [ ] AC1.4: Đối xứng: cột trái tại `p` == cột phải tại `p + 0.5` (cả frc lẫn vel).
+- [ ] AC1.5: `grounded`, `have_incentive=False`, giữa pha phải-vung: `r_frc=−1, r_vel=0, l_frc=0, l_vel=−1`.
+- [ ] AC1.6: `grounded`, `have_incentive=False`, giữa chống kép: `r_frc=0, l_frc=0, r_vel=−1, l_vel=−1`.
+
+### Việc 2 — `check_gait_clock.py`: kiểm tra offline (chạy không cần Isaac)
+- Kiểm AC1.2–AC1.6 bằng `assert`, in `PASS` từng mục.
+- Lưu 1 ảnh PNG 4 đường (r_frc, r_vel, l_frc, l_vel theo `p`) vào thư mục scratch/log, **không** commit ảnh.
+  Đây là lúc dùng matplotlib (chỉ trong script, không trong `gait_clock.py`).
+- [ ] AC2.1: Script chạy exit 0, dán output vào báo cáo.
+- [ ] AC2.2: Ảnh khớp Hình 3 của paper: vùng vung của chân nào thì `frc` của chân đó ở −1; vùng chống thì `vel` ở −1.
+
+### Việc 3 — `interface.py`: đồng hồ vào hợp đồng
+- `OfficialInterfaceCfg`: thêm `gait_period_s` (Việc 0), `observation_space = 62`.
+- Bộ đếm riêng `self.gait_step` (int, shape `(num_envs,)`). **Không** dùng `episode_length_buf`:
+  `scripts/rsl_rl/train.py:220` gọi `init_at_random_ep_len=True` nên `episode_length_buf` bị random lúc đầu train, còn Pi thì đếm từ 0.
+- Một hàm duy nhất trả `p = (gait_step × step_dt / gait_period_s) mod 1`. Cả obs (Việc 3) và reward (Việc 4) **cùng gọi hàm này**.
+- Obs = 60 số cũ (giữ nguyên thứ tự) + `[sin(2πp), cos(2πp)]` ở **cuối**. Chỉ khung hiện tại, **không** stack 4 khung (pha là tất định, stack là thừa).
+- `_reset_idx`: `gait_step = 0` cho env bị reset.
+- Tự quyết chỗ tăng `gait_step` sao cho thoả AC3.3 — nghĩ xem `DirectRLEnv.step()` gọi `_pre_physics_step` → vật lý → `_get_rewards` → reset → `_get_observations` theo thứ tự nào.
+- Cập nhật docstring đầu file mục "Nội dung hợp đồng": obs 62D, thứ tự, công thức pha, `p=0` lúc reset. Thêm `TODO: firmware Pi phải nối 2 số này, cùng gait_period_s, cùng bộ đếm reset về 0`.
+
+- [ ] AC3.1: `obs['policy'].shape == (num_envs, 62)`; 60 cột đầu tính y hệt trước.
+- [ ] AC3.2: Ngay sau reset: 2 cột cuối = `(0, 1)`.
+- [ ] AC3.3: Sau k bước (không reset): `p = k·step_dt/T mod 1`. Reward của bước đó dùng **cùng** `p` với obs trả về ở bước đó.
+- [ ] AC3.4: Reset một phần env thì chỉ env đó về `p=0`, env khác chạy tiếp.
+
+### Việc 4 — `task_walk.py`: reward Siekmann
+- Cfg task thêm: `swing_ratio`, `strict_relaxer` (0.1), `stance_mode="grounded"`, `have_incentive=False`,
+  `max_foot_force` (≈ trọng lượng robot `4.643 × 9.81 ≈ 45 N`, vì pha chống đơn một chân gánh cả thân — apex dùng 250 N cho Cassie, **không** chép số đó),
+  `max_foot_speed` (gợi ý 0.5 m/s, `TODO`), `w_clock_frc`, `w_clock_vel` (gợi ý 0.5 mỗi cái, `TODO tune`).
+- `__init__`: dựng bảng đồng hồ 1 lần, đưa lên `self.device`.
+- `_get_rewards`:
+  - Đo: lực = chuẩn `net_forces_w` của 2 chân (đã có `forces[:, self.contact_ids]`); tốc độ = chuẩn `body_link_lin_vel_w` của 2 chân (đã có `feet_vel`).
+  - Chuẩn hoá: `min(đo, max) / max` → ∈ [0, 1]. **Cap trước khi chia** (chống policy dậm thật mạnh để ăn điểm).
+  - Điểm mỗi chân: `tan(π/4 · clock · đo_chuẩn_hoá)` như apex. Thứ tự chân trong `contact_ids`/`feet_ids` là `(Footleft, Footright)`, còn bảng là `[r, …, l, …]` — **ghép đúng trái với trái**.
+  - Cộng `w_clock_frc·(frc_L+frc_R) + w_clock_vel·(vel_L+vel_R)` vào reward.
+  - **Bỏ** số hạng `0.15*swing` và TODO của nó (thưởng nhảy gấp đôi bước đi — ALGO §2.2.1; đồng hồ thay thế nó).
+  - Các số hạng khác giữ nguyên.
+- (Nên làm) Ghi trung bình `frc_score`, `vel_score` vào `self.extras["log"]` để xem trên TensorBoard robot có theo nhịp không.
+
+- [ ] AC4.1: Không còn `swing` trong reward. Không đổi số hạng nào khác.
+- [ ] AC4.2: Không có vòng `for` qua env; mọi thứ là tensor `(num_envs, …)`.
+- [ ] AC4.3: Ghép chân đúng: in thử 1 env lúc `p` giữa pha phải-vung, chân **phải** chạm đất → `frc_R < 0`.
+
+### Việc 5 — Phụ trợ
+- `ppo.py`: `experiment_name = "officialdesign_clock"` (checkpoint 60D cũ không load được vào mạng 62D, tách thư mục để không nhầm).
+- `validate_officialdesign.py` dòng 31, 110: thay `60` bằng `env.cfg.observation_space` (hợp đồng đổi thật, không phải sửa test cho qua).
+- `docs/ALGO.md`: tick B5a; ở §2.4.1 ghi quyết định 1 và 2 đã chốt (Siekmann, hoãn đứng yên).
+- [ ] AC5.1: `validate_officialdesign.py` pass trên GPU, dán output.
+- [ ] AC5.2: Train smoke `--num_envs 256 --max_iterations 2 --headless` exit 0, log ghi `Observation dim 62`.
+
+### Việc 6 — Train thật & đọc kết quả (sau khi AC0–AC5 pass)
+- Train `--num_envs 2048`, ~1500 iteration. Xem TensorBoard: `frc_score`, `vel_score` phải **tăng về 0** (ít bị phạt hơn).
+- Play và quan sát: hai chân luân phiên, đúng nhịp `T`? Hay nhảy / lê / đứng 1 chân?
+- Đối chiếu bảng ALGO §2.4.2 để quyết bước tiếp.
+- [ ] AC6.1: Báo cáo gồm đường cong reward, 2 score clock, và mô tả dáng đi khi play.
+
+---
+
 ## Công việc mới — OFFICIALdesign handoff 2026-09-30 (2026-10-01)
 
 User yêu cầu tích hợp robot mới để train. Phạm vi đợt này độc lập với kế hoạch
