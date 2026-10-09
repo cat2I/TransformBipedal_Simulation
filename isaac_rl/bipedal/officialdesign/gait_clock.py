@@ -8,6 +8,7 @@ sang torch trên thiết bị chạy mô phỏng. Runtime chỉ tra bảng để
 đồng thời nhiều env, không gọi scipy và không import code gaitclockref.
 """
 
+# gait_clock.py mô tả lịch chân: tại pha đó, lực và tốc độ của mỗi chân nhận hệ số nào.
 import numpy as np
 import torch
 
@@ -156,3 +157,29 @@ def build_gait_clock(swing_ratio: float = 0.35,
         device=device,
     )
     return table.contiguous()
+
+
+#hàm tra bảng theo pha (giống kiểu bảng cửu chương )
+def lookup_gait_clock(
+    table: torch.Tensor,
+    phase: torch.Tensor,
+) -> torch.Tensor:
+    """Tra LUT (4, N) bằng pha (num_envs,), trả hệ số (num_envs, 4).
+
+    Table và phase phải ở cùng thiết bị.
+    Wrap pha về [0, 1), rồi nội suy tuyến tính giữa hai cột gần nhất.
+    Thứ tự đầu ra: [r_frc, r_vel, l_frc, l_vel].
+    """
+    num_samples = table.shape[1]
+
+    position = torch.remainder(phase, 1.0) * num_samples
+    lower = torch.floor(position)
+    weight = (position - lower).unsqueeze(-1)
+
+    index0 = lower.to(dtype=torch.int64) % num_samples
+    index1 = (index0 + 1) % num_samples
+
+    values0 = table[:, index0].transpose(0, 1)
+    values1 = table[:, index1].transpose(0, 1)
+
+    return values0 + weight * (values1 - values0)

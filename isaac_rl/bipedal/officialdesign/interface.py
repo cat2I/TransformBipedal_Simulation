@@ -69,7 +69,7 @@ class OfficialInterfaceCfg(DirectRLEnvCfg): #giao diện điều khiển chung
     # tính gait_ste p = step_dt * gait_steps_per_policy_step -> gait_step = 0.05 * 4 = 0.2
     decimation = 10 #mỗi lần policy đưa action, mô phỏng chạy 10 bước vật lí trc khi sang lượt poli tiếp 
     action_space = 10 #policy xuất 10 số, mỗi số điều khiển 1 khớp 
-    observation_space = 60 # policy nhận 60 số mỗi lượt 
+    observation_space = 62 # policy nhận 60 số mỗi lượt. thêm 2 observation của 2 pha sin cos 
     state_space = 0
 
 
@@ -97,7 +97,11 @@ class OfficialInterfaceCfg(DirectRLEnvCfg): #giao diện điều khiển chung
     calibration_status = CALIBRATION["calibration_status"]
 
     asset_sha256 = USD_REPORT["sha256"]
-    action_step_deg = 2.0
+    action_step_deg = 2.0 
+
+    #tạo bộ đếm và hàm tính pha 
+    gait_period_s = 3.2
+
     actuator_delay_steps = 2  # 10 ms simulation assumption, not measured
     orientation_noise_std = 0.015
     gyro_noise_std = 0.01
@@ -135,16 +139,33 @@ class OfficialInterfaceEnv(DirectRLEnv):
         self.previous_target = self.applied_target.clone()
         self.previous_actions = torch.zeros_like(self.cmd_actions)
         self.actions = torch.zeros_like(self.cmd_actions)
+
         self.imu_history = torch.zeros(self.num_envs, 4, 5, device=self.device)
+        
         self.action_history = self._normalize(self.cmd_actions)[:, None, :].repeat(1, 4, 1)
         self._substep = 0
         self._obs_step = -1
-        self._obs = torch.zeros(self.num_envs, 60, device=self.device)
+
+        
+        if self.cfg.gait_period_s <= 0:
+            raise ValueError("gait_period_s must be positive")
+        #tạo bộ đếm bước cho mỗi env, ban đầu tensor toàn 0
+        self.gait_step = torch.zeros(
+        self.num_envs, #cần bao nhiêu bộ đếm: ví dụ chạy x env cần x bộ đếm 
+        dtype=torch.int64,
+        device=self.device,
+        )
+        
+        self._obs = torch.zeros(self.num_envs, self.cfg.observation_space, device=self.device)
         self._fresh_reset = torch.ones(self.num_envs, dtype=torch.bool, device=self.device)
         # Explicitly keep runtime limits in sync with the control interface.
         bounds = torch.stack((self.servo_min*self.signs, self.servo_max*self.signs), dim=-1).sort(dim=-1).values
         self.robot.write_joint_position_limit_to_sim(torch.deg2rad(bounds).repeat(self.num_envs, 1, 1), joint_ids=self.joint_ids)
-        print(f"OFFICIALdesign: 13 links, 10 DOF, 60 observations; {self.cfg.calibration_status}")
+        print(
+            f"OFFICIALdesign: 13 links, 10 DOF, "
+            f"{self.cfg.observation_space} observations; "
+            f"{self.cfg.calibration_status}"
+    )
         print(f"Policy joint order: {names}; Isaac indices: {self.joint_ids}")
 
     def _setup_scene(self):
@@ -167,6 +188,16 @@ class OfficialInterfaceEnv(DirectRLEnv):
     def _normalize(self, policy_deg):
         return (2*(policy_deg-self.servo_min)/(self.servo_max-self.servo_min)-1).clamp(-1, 1)
 
+    # hàm đọc bộ đếm (gait_clock.py) và tính pha 
+    # interface.py giữ thời gian: tự đếm bước và tính pha bằng _get_gait_phase().
+    def _get_gait_phase(self) -> torch.Tensor: #trả về 1 mảng tensor 
+        """Trả pha chuẩn hóa (num_envs,) trong [0, 1).
+
+        Đọc bộ đếm riêng của từng env; không tăng bộ đếm.
+        """
+        elapsed_s = self.gait_step.to(dtype=torch.float32) * self.step_dt # chuyển số bước sang thời gian 
+        return torch.remainder(elapsed_s / self.cfg.gait_period_s, 1.0) # chia chu kì -> tính xem đi được bao nhiêu phần chu kì
+
     def _get_observations(self):
         # get_observations() can be called twice by a runner; do not shift twice.
         if self._obs_step != self.common_step_counter or self._fresh_reset.any():
@@ -185,7 +216,26 @@ class OfficialInterfaceEnv(DirectRLEnv):
             self.imu_history[self._fresh_reset] = sample[self._fresh_reset, None, :]
             self.action_history[self._fresh_reset] = normalized[self._fresh_reset, None, :]
             self._fresh_reset[:] = False
-            self._obs = torch.cat((self.imu_history.flatten(1), self.action_history.flatten(1)), dim=-1)
+
+            # lấy observation pha 
+            phase = self._get_gait_phase()
+            phase_angle = 2.0 * torch.pi * phase # chuyển pha từ 0 1 sang 2pi 
+            # đồng hồ sin cos cho pha 
+            clock_obs = torch.stack(
+                (torch.sin(phase_angle), torch.cos(phase_angle)),dim=-1,
+            )
+
+            #tổng observation 
+            self._obs = torch.cat(
+                (
+                    self.imu_history.flatten(1),
+                    self.action_history.flatten(1),
+                    clock_obs,
+                ),
+                dim=-1,
+            )
+
+            
             self._obs_step = self.common_step_counter
         return {"policy": self._obs}
 
@@ -198,6 +248,12 @@ class OfficialInterfaceEnv(DirectRLEnv):
         self.applied_target = self._to_urdf(self.cmd_actions)
         self._substep = 0
 
+        # 1 lần tăng cho mỗi bước của policy 
+        self.gait_step += 1 
+        # Mỗi bước policy = 10 bước vật lý = 0.05 s.
+        # gait_step đếm riêng từng env: tăng 1 trong _pre_physics_step, về 0 khi reset.
+
+
     def _apply_action(self):
         target = self.previous_target if self._substep < self.cfg.actuator_delay_steps else self.applied_target
         self.robot.set_joint_position_target(target, joint_ids=self.joint_ids)
@@ -208,6 +264,8 @@ class OfficialInterfaceEnv(DirectRLEnv):
         if env_ids is None:
             env_ids = self.robot._ALL_INDICES
         super()._reset_idx(env_ids)
+        # thêm đồng hồ reset pha 
+        self.gait_step[env_ids] = 0 # thiếu -> env reset nhưng vẫn tiếp pha ep trước 
         root = as_torch(self.robot.data.default_root_state)[env_ids].clone()
         root[:, :3] += self.scene.env_origins[env_ids]
         joint_pos = as_torch(self.robot.data.default_joint_pos)[env_ids].clone()

@@ -19,15 +19,30 @@ from isaaclab.utils.configclass import configclass
 from .._shared.lab3 import as_torch
 from .interface import OfficialInterfaceCfg, OfficialInterfaceEnv, rpy_xyzw
 from .robot import BUILD, CALIBRATION
-
+#thêm gait clock 
+from .gait_clock import build_gait_clock, lookup_gait_clock
 
 @configclass
-class OfficialWalkEnvCfg(OfficialInterfaceCfg):
+class OfficialWalkEnvCfg(OfficialInterfaceCfg): #config 
     episode_length_s = 10.0
     target_velocity = 0.15  # fixed +x command; no unobserved random direction
     min_base_height = 0.20
     max_tilt = 0.9
     target_height = BUILD["spawn_height_m"] - CALIBRATION["spawn_clearance_m"]
+
+    # cấu hình reward gait clock 
+    swing_ratio = 0.35
+    strict_relaxer = 0.1 #hệ số chuyển pha 
+    stance_mode = "grounded"
+    have_incentive = False
+
+    # Một chân chống đơn gánh khoảng trọng lượng robot:
+    # 4.643 kg * 9.81 m/s² ≈ 45 N.
+    max_foot_force = 45.0
+    max_foot_speed = 0.5  # tốc độ bàn chân m/s 
+    # trọng số của lực và vận tốc (chỉnh trong rew shaping)
+    w_clock_frc = 0.5
+    w_clock_vel = 0.5
 
 
 class OfficialWalkEnv(OfficialInterfaceEnv):
@@ -41,27 +56,60 @@ class OfficialWalkEnv(OfficialInterfaceEnv):
         self.sole_offsets = torch.tensor([BUILD["feet"][name]["sole_z_local_m"]
                                           for name in ("Footleft", "Footright")], device=self.device)
 
+        # build gait clock  
+        self.clock_table = build_gait_clock(
+            swing_ratio=self.cfg.swing_ratio,
+            strict_relaxer=self.cfg.strict_relaxer,
+            stance_mode=self.cfg.stance_mode,
+            have_incentive=self.cfg.have_incentive,
+            device=self.device,
+        )
+
     def _get_rewards(self):
         """Track +x walking, upright height and swing clearance, penalize slip/effort."""
         orientation = rpy_xyzw(as_torch(self.robot.data.root_quat_w))
+
         position = as_torch(self.robot.data.root_pos_w) - self.scene.env_origins
         velocity = as_torch(self.robot.data.root_com_lin_vel_b)
+
         gyro = as_torch(self.robot.data.root_com_ang_vel_b)
+        # lực và vận tốc của bàn chân 
         feet_vel = as_torch(self.robot.data.body_link_lin_vel_w)[:, self.feet_ids]
         forces = as_torch(self.contact.data.net_forces_w)
         # Contact order follows the sensor; map by names independently of articulation order.
-        touching = torch.linalg.vector_norm(forces[:, self.contact_ids], dim=-1) > 1.0
+        foot_force = torch.linalg.vector_norm(forces[:, self.contact_ids], dim=-1)
+        foot_speed = torch.linalg.vector_norm(feet_vel, dim=-1)
+        touching = foot_force > 1.0
+
+        #chặn cho giá trị max trước khi chia để kq trong 0 1 
+        force_norm = (foot_force.clamp(max=self.cfg.max_foot_force)/ self.cfg.max_foot_force)
+        speed_norm = (foot_speed.clamp(max=self.cfg.max_foot_speed)/ self.cfg.max_foot_speed)
+
+        # lấy pha và lấy bảng tra đồng hồ 
+        phase = self._get_gait_phase()
+        clock = lookup_gait_clock(self.clock_table, phase)
+
+        # Bảng: [r_frc, r_vel, l_frc, l_vel].
+        # Dữ liệu đo: [trái, phải] → lấy hệ số theo cùng thứ tự.
+        force_clock = clock[:, [2, 0]]
+        speed_clock = clock[:, [3, 1]]
+
+        #công thức lấy chuẩn theo source apex, đưa mỗi chân về điểm trong khoảng -1 1 
+        frc_score = torch.tan((torch.pi / 4.0) * force_clock * force_norm).sum(dim=-1)
+        vel_score = torch.tan((torch.pi / 4.0) * speed_clock * speed_norm).sum(dim=-1)   
+        
         feet_z = as_torch(self.robot.data.body_link_pos_w)[:, self.feet_ids, 2] - self.scene.env_origins[:, None, 2]
         sole_height = feet_z + self.sole_offsets  # flat-foot approximation of STL sole height
-        # TODO: swing dùng .mean(-1) nên HAI chân bay được 1.0 còn MỘT chân bay chỉ 0.5
-        #       -> số hạng này thưởng nhảy gấp đôi bước đi. Xem docs/ALGO.md §2.2.1
-        #       và bản vá march_alt ở §2.2.2.
-        swing = ((~touching) * torch.exp(-((sole_height-0.035)/0.025)**2)).mean(-1)
         effort = as_torch(self.robot.data.applied_torque)[:, self.joint_ids]
+        
         reward = (1.5*torch.exp(-((velocity[:, 0]-self.cfg.target_velocity)/0.20)**2)
                   + 0.5*torch.exp(-orientation[:, :2].square().sum(-1)/0.12)
                   + 0.5*torch.exp(-((position[:, 2]-self.cfg.target_height)/0.06)**2)
-                  + 0.15*swing
+                  # thưởng gait clock 
+                  + self.cfg.w_clock_frc * frc_score 
+                  + self.cfg.w_clock_vel * vel_score
+
+                  
                   - 0.5*velocity[:, 1].square() - 0.1*gyro[:, 2].square()
                   - 0.2*orientation[:, 2].square() - 0.2*position[:, 1].square()
                   - 0.02*(touching*feet_vel[:, :, :2].square().sum(-1)).sum(-1)
