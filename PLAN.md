@@ -174,6 +174,11 @@ Loại `have_incentive=True`: thưởng chân chống gánh lực + chân vung c
   (L nhấc đúng bước 328, 336, 344, 352, 360, 368; R nhấc 2 bước sau), **bỏ qua đồng hồ 3.2 s**: đúng lượt 9 / sai lượt 9. Air ≤ 0.15 s, `h` dao động cùng nhịp 8 bước.
   Nghi: `T = 3.2 s` chậm gấp ~3 lần nhịp con lắc tự nhiên của chân (`2π√(L/g)` ≈ 1.15 s với L≈0.33) → vung 1.12 s đứng một chân quá khó; gõ nhanh hai chân "rải đều" vẫn trúng cửa sổ gate một phần.
   → Việc 0 (chọn `T`) quay lại thành nút chính. Chưa có TensorBoard run 2.
+- **Run 3 `2026-10-09_18-27-28` (`swing 1.0`, `gait_period_s=1.0`):** vẫn lê chân. Iter 499 so run 2: `frc` −0.285 vs −0.30, `swing` 0.029 vs 0.031, `vel` −0.51 vs −0.51.
+  Raw `swing` cả 3 run ≈ 0.026–0.031 → tăng trọng số ×7 và đổi `T` gần như **không** đổi hành vi → nghi nút cổ chai không nằm ở trọng số.
+  Kiểm: `sole_height` lúc đứng ≈ 0 (spawn 0.380 − 0.329 − 0.045 ≈ 0.005) → mốc 3.5 cm đúng. `Footleft` ở base y = −0.075 → **chân phải thật** (khớp ghi chú CAD).
+  Nghi tiếp: (1) ngân sách mẫu 256×24×500 ≈ 3M bước, ~1/50 cỡ train đi bộ thông thường; (2) action std ≈ 1.0 không giảm (run 1) × `action_step_deg` 6.61 → nhiễu ±6.6°/bước át động tác chậm.
+  (2) đụng PPO hyperparameter (`init_noise_std`) — **ngoài phạm vi B5a, cần User quyết**.
 - [ ] AC5c.2: Báo cáo run 2 so với run 1: `swing`, `frc`, `vel`, episode length, play (chân nào nhấc, có đúng lượt, có tiến không).
 
 ### Việc M — Giới hạn động cơ theo datasheet, bản "tối đa" (2026-10-09, tạm — sửa lại khi đo A1)

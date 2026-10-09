@@ -37,7 +37,7 @@ Mở `http://localhost:6006`. Xem:
 ```bash
 ./run.sh scripts/rsl_rl/play.py --task Official-Walk-v0 --num_envs 1 --load_run <ngày_giờ>
 ```
-- `<ngày_giờ>` = tên thư mục run, xem bằng `ls -t logs/officialdesign_clock` (mới nhất ở trên).
+- `<ngày_giờ>`0 = tên thư mục run, xem bằng `ls -t logs/officialdesign_clock` (mới nhất ở trên).
 - Mặc định load checkpoint mới nhất của run đó.
 - Cách đọc log play (in 2 bước/dòng, 1 chu kỳ 3.2 s ≈ 32 dòng):
   - `clock=[sin, cos]`: `sin > 0` → lượt chân phải vung; `sin < 0` → lượt chân trái.
