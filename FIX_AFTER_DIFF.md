@@ -98,3 +98,56 @@ Không có hàm này thì Việc 4 (reward) không dùng được bảng.
 - Việc 0 (phép tính `T`, `swing_ratio`) chưa có kết quả. Không chặn Việc 1, nhưng phải xong trước Việc 3.
   - (2026-10-09) Nới cổng: Việc 0 phải xong trước **AC5.2 / Việc 6**, không còn chặn Việc 3. Xem PLAN Việc 0.
   - F3.1 (hàm tra) phải xong trước **Việc 4**. Việc 3 không cần nó.
+
+---
+
+## Lần 4 — 2026-10-09 (review commit `d02e426` + working tree `task_walk.py`, B5a Việc 3–4)
+
+Kết quả: **F3.1 pass** (QA chạy `lookup_gait_clock`: wrap đúng, khớp cột bảng, không tràn chỉ số).
+Việc 3 logic **pass**: tăng `gait_step` trong `_pre_physics_step` là chỗ đúng duy nhất để obs và reward thấy cùng `p`.
+Việc 4 **pass** AC4.1 (đã sửa, xem PLAN), AC4.2. Ghép chân `[2, 0]` / `[3, 1]` = (trái, phải) **đúng**.
+- [x] AC-F3.1
+
+### F4.1 — Docstring hợp đồng đầu `interface.py` chưa cập nhật (Việc 3, gạch cuối)
+Vẫn ghi "Observation 60D". Firmware Pi đọc docstring này để biết phải gửi gì.
+Sửa mục "Nội dung hợp đồng": obs 62D = 60 cũ + `[sin 2πp, cos 2πp]` ở cuối; `p = (gait_step·step_dt/gait_period_s) mod 1`;
+`gait_step` về 0 lúc reset, tăng 1 mỗi bước policy. Thêm `TODO: firmware Pi phải nối 2 số này, cùng gait_period_s, cùng bộ đếm reset về 0`.
+- [ ] AC-F4.1: `grep -n "60D" interface.py` → 0; có dòng `TODO: firmware Pi`.
+
+### F4.2 — Thiếu `TODO` ở số tạm
+- `gait_period_s = 3.2` thiếu `TODO: Việc 0 chưa chốt` (điều kiện để được làm Việc 3 trước, PLAN Việc 0).
+- `max_foot_speed`, `w_clock_frc`, `w_clock_vel` thiếu `TODO` (PLAN Việc 4 ghi rõ là số gợi ý).
+- [ ] AC-F4.2: 4 trường trên đều có `TODO`.
+
+### F4.3 — Comment sai `interface.py:69`
+"`gait_ste p = step_dt * gait_steps_per_policy_step -> 0.05 * 4 = 0.2`": không có biến đó, không có số 4.
+Đúng: mỗi bước policy `gait_step += 1`, tức `p` tăng `step_dt / gait_period_s`.
+- [ ] AC-F4.3: comment ghi đúng công thức.
+
+### F4.4 — AC4.3 chưa có bằng chứng
+In thử 1 env: lúc `p` ở giữa pha phải-vung (`p ≈ s/2`) mà chân **phải** đang chạm đất → `frc` chân phải < 0, chân trái = 0. Dán output.
+- [ ] AC-F4.4 (= PLAN AC4.3)
+
+### Ghi chú
+- F3.2 (comment `gait_clock.py`) **vẫn chưa làm**. Dòng 126, 148 vẫn là `#` rỗng; dòng 83 vẫn cụt.
+- (Nên làm, PLAN Việc 4) log `frc_score`, `vel_score`, `swing` vào `self.extras["log"]` — chưa có. Thiếu nó thì Việc 6 không đọc được robot có theo nhịp không.
+- `validate_officialdesign.py` còn ghi cứng `60` → sẽ fail cho tới khi làm Việc 5. Đó là lỗi đúng, không phải lỗi code mới.
+
+---
+
+## Lần 5 — 2026-10-09 (review working tree: Việc M + điều kiện Việc 5b)
+
+Kết quả: `calibration.json` heavy `11.77 / 2.31` ✅, `action_step_deg = 6.61` ✅, `experiment_name` ✅.
+Log `extras["log"]` ✅: rsl_rl `logger.py:108` đọc `extras["log"]`, tensor 0 chiều được `unsqueeze`, key có `/` ghi thẳng thành nhóm `Gait/`.
+Không chặn train chẩn đoán (5b).
+
+### F5.1 — `calibration.json` dòng 8 còn ghi "velocity 4.7 rad/s provisional"
+Sai với heavy bây giờ. Thay bằng nguồn số: 0.454 s/60° @12V → 2.31 rad/s; stall 120 kg·cm @12V → 11.77 N·m; STS3215 stall 30 kg·cm @12V → 2.94 N·m.
+- [ ] AC-F5.1 (= một phần ACM.1, ACM.2)
+
+### F5.2 — Comment `action_step_deg` thiếu phép tính và `TODO` firmware
+Hiện chỉ ghi "ĐỔI LẠI ... CŨ LÀ 2.0". Cần: `132.16°/s (STS3120 @12V, chậm nhất) / 20 Hz = 6.61`, và `TODO: firmware Pi đổi cùng số`.
+- [ ] AC-F5.2 (= ACM.3)
+
+### Ghi chú
+- F4.1–F4.3 (Lần 4) vẫn mở. `swing` vẫn `.mean` → thưởng tối đa thực 0.075, chưa có comment ghi điều đó.

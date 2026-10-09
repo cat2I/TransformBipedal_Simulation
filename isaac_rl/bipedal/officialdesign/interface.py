@@ -97,7 +97,7 @@ class OfficialInterfaceCfg(DirectRLEnvCfg): #giao diện điều khiển chung
     calibration_status = CALIBRATION["calibration_status"]
 
     asset_sha256 = USD_REPORT["sha256"]
-    action_step_deg = 2.0 
+    action_step_deg = 6.61 #ĐỔI LẠI ĐỂ PHÙ HỢP VỚI THAY ĐỔI CONFIG CỦA ĐỘNG CƠ, CŨ LÀ 2.0
 
     #tạo bộ đếm và hàm tính pha 
     gait_period_s = 3.2

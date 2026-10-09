@@ -27,7 +27,7 @@
   "source_sha256": {
     "sim_handoff /OFFICIALdesign/urdf/OFFICIALdesign.urdf": "a1aae80868651c34cf7c521de08eed1a1210df0f3943b2294cf3717d81b68602",
     "sim_handoff /inertial_report.csv": "d53b977743f1e82ba3ab2ff57263acf1ec9e5524133612e7485aba3fc634ef22",
-    "assets/officialdesign/meta/calibration.json": "7f25d11c53f59fd3cad37580a19bbdc71b7d8b2418bfb61163dc0504788dc75b",
+    "assets/officialdesign/meta/calibration.json": "a0afc19f85c706c34b67160d5a759c59a23903ff3ae893f08365141d795d8208",
     "assets/officialdesign/OFFICIALdesign/meshes/Baselink.STL": "285d517bca2cc024585de33b321841701528ad7c365ec7a3485a9ebc84d6f39b",
     "assets/officialdesign/OFFICIALdesign/meshes/Bubleft.STL": "ac44ec4abd8924396ebb1cad84b3c3499fb431c0345178ec69ed25b9ec02550c",
     "assets/officialdesign/OFFICIALdesign/meshes/Bubright.STL": "31786394f35672e2f72e3b8cd74abad3bf018e0ad8360a31c0adaa1b8a582fd1",

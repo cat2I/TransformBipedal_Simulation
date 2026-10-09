@@ -71,8 +71,9 @@ Yêu cầu:
 - [x] AC1.5: `grounded`, `have_incentive=False`, giữa pha phải-vung: `r_frc=−1, r_vel=0, l_frc=0, l_vel=−1`.
 - [x] AC1.6: `grounded`, `have_incentive=False`, giữa chống kép: `r_frc=0, l_frc=0, r_vel=−1, l_vel=−1`.
   (Review 2026-10-08, commit `b6b2805`: AC1.2–1.6 do QA chạy thử cả 6 tổ hợp mode×incentive. Việc 2 vẫn phải tự viết script kiểm.)
-- [ ] AC1.7: Có hàm tra `(table (4,N), p (num_envs,)) → (num_envs, 4)`, chạy trên GPU, không vòng lặp Python;
+- [x] AC1.7: Có hàm tra `(table (4,N), p (num_envs,)) → (num_envs, 4)`, chạy trên GPU, không vòng lặp Python;
   `p = 1.0`, `p = 1.3`, `p = −0.2` cho cùng kết quả với `p = 0`, `0.3`, `0.8`. → xem FIX_AFTER_DIFF Lần 3 / F3.1.
+  (Review 2026-10-09, commit `d02e426`: QA chạy `lookup_gait_clock` — wrap sai lệch 0.0, khớp đúng cột bảng sai lệch 0.0, `p=−1e−9` không tràn chỉ số.)
 
 ### Việc 2 — `check_gait_clock.py`: kiểm tra offline (chạy không cần Isaac)
 - Kiểm AC1.2–AC1.6 bằng `assert`, in `PASS` từng mục.
@@ -93,10 +94,13 @@ Yêu cầu:
 - Tự quyết chỗ tăng `gait_step` sao cho thoả AC3.3 — nghĩ xem `DirectRLEnv.step()` gọi `_pre_physics_step` → vật lý → `_get_rewards` → reset → `_get_observations` theo thứ tự nào.
 - Cập nhật docstring đầu file mục "Nội dung hợp đồng": obs 62D, thứ tự, công thức pha, `p=0` lúc reset. Thêm `TODO: firmware Pi phải nối 2 số này, cùng gait_period_s, cùng bộ đếm reset về 0`.
 
-- [ ] AC3.1: `obs['policy'].shape == (num_envs, 62)`; 60 cột đầu tính y hệt trước.
-- [ ] AC3.2: Ngay sau reset: 2 cột cuối = `(0, 1)`.
-- [ ] AC3.3: Sau k bước (không reset): `p = k·step_dt/T mod 1`. Reward của bước đó dùng **cùng** `p` với obs trả về ở bước đó.
-- [ ] AC3.4: Reset một phần env thì chỉ env đó về `p=0`, env khác chạy tiếp.
+- [x] AC3.1: `obs['policy'].shape == (num_envs, 62)`; 60 cột đầu tính y hệt trước.
+- [x] AC3.2: Ngay sau reset: 2 cột cuối = `(0, 1)`.
+- [x] AC3.3: Sau k bước (không reset): `p = k·step_dt/T mod 1`. Reward của bước đó dùng **cùng** `p` với obs trả về ở bước đó.
+- [x] AC3.4: Reset một phần env thì chỉ env đó về `p=0`, env khác chạy tiếp.
+  (Review 2026-10-09, commit `d02e426`: pass qua đọc code — `gait_step += 1` trong `_pre_physics_step` (chạy trước `_get_rewards` và `_reset_idx`),
+  `gait_step[env_ids] = 0` trong `_reset_idx` (chạy trước `_get_observations`), obs và reward cùng gọi `_get_gait_phase()`.
+  Bằng chứng chạy thật đi cùng AC5.1. Phần docstring hợp đồng của Việc 3 **chưa làm** → FIX_AFTER_DIFF Lần 4 / F4.1.)
 
 ### Việc 4 — `task_walk.py`: reward Siekmann
 - Cfg task thêm: `swing_ratio`, `strict_relaxer` (0.1), `stance_mode="grounded"`, `have_incentive=False`,
@@ -112,8 +116,11 @@ Yêu cầu:
   - Các số hạng khác giữ nguyên.
 - (Nên làm) Ghi trung bình `frc_score`, `vel_score` vào `self.extras["log"]` để xem trên TensorBoard robot có theo nhịp không.
 
-- [ ] AC4.1: Không còn `swing` trong reward. Không đổi số hạng nào khác.
-- [ ] AC4.2: Không có vòng `for` qua env; mọi thứ là tensor `(num_envs, …)`.
+- **2026-10-09 — User giữ `swing` nhưng gate theo đồng hồ** (working tree, chưa commit): chỉ chân có `frc` âm (đang tới lượt vung) mới được thưởng độ cao.
+  Chấp nhận: lỗi "nhảy ăn gấp đôi" (ALGO §2.2.1) biến mất vì hai chân không bao giờ cùng có gate > 0 (với `grounded`, `s < 0.5`).
+  Lý do giữ: phạt lực chỉ bắt chân vung *không chạm đất*, không bắt *nhấc cao* → robot có thể lê chân sát sàn. AC4.1 sửa lại như dưới.
+- [x] AC4.1: ~~Không còn `swing` trong reward.~~ `swing` chỉ thưởng chân có `−frc_clock > 0`. Không đổi số hạng nào khác.
+- [x] AC4.2: Không có vòng `for` qua env; mọi thứ là tensor `(num_envs, …)`.
 - [ ] AC4.3: Ghép chân đúng: in thử 1 env lúc `p` giữa pha phải-vung, chân **phải** chạm đất → `frc_R < 0`.
 
 ### Việc 5 — Phụ trợ
@@ -122,6 +129,80 @@ Yêu cầu:
 - `docs/ALGO.md`: tick B5a; ở §2.4.1 ghi quyết định 1 và 2 đã chốt (Siekmann, hoãn đứng yên).
 - [ ] AC5.1: `validate_officialdesign.py` pass trên GPU, dán output.
 - [ ] AC5.2: Train smoke `--num_envs 256 --max_iterations 2 --headless` exit 0, log ghi `Observation dim 62`.
+
+### Việc 5b — Train chẩn đoán (2026-10-09, User muốn xem đồng hồ có hoạt động không, trước khi chốt Việc 0)
+Mục đích: **chỉ** trả lời "dây nối đồng hồ → reward có đúng không". Policy này **bỏ đi**, không deploy, không thay Việc 6.
+Không vi phạm cổng Việc 0: cổng chặn train *thật*; run này không giữ lại.
+- Điều kiện trước: (a) log `frc_score`, `vel_score`, `swing` vào `self.extras["log"]` (PLAN Việc 4, "nên làm" → **bắt buộc** cho 5b);
+  (b) `ppo.py` `experiment_name = "officialdesign_clock"` (Việc 5); (c) smoke 2 iter exit 0.
+- Chạy với số **khả thi** qua override dòng lệnh, **không sửa code hợp đồng**: `env.target_velocity=0.09 env.action_step_deg=2.25`.
+  Lý do: với `v=0.15`, `action_step_deg=2.0` thì hông cần ≈48°/s > 40°/s (Việc 0) → robot không theo kịp lịch,
+  run fail cũng không biết là do dây nối sai hay do vật lý không cho phép.
+  (Nếu Việc M xong trước thì **bỏ** override `action_step_deg`; tính lại `v` khả thi theo tốc độ mới.)
+- [x] AC5b.1: TensorBoard có 3 đường `frc_score`, `vel_score`, `swing`.
+  (Smoke 2026-10-09 `officialdesign_clock/2026-10-09_15-11-17`: exit 0, MLP `in_features=62`, bảng khớp heavy `2.31 / 11.77`, light `4.7 / 2.94`,
+  `env.yaml` `action_step_deg: 6.61`. Iter 1: `frc −0.34`, `vel −0.64`, `swing 0.10`, **episode length ≈ 15 bước (0.75 s)** — theo dõi: nghi `action_step_deg` 6.61 × nhiễu khám phá std 1.0 làm robot run gấp 3.3 lần lúc đầu.)
+- [ ] AC5b.2: Báo cáo: `frc_score`, `vel_score` có đi lên về 0 không; play 1 env, hai chân có luân phiên theo nhịp `T` không.
+  **Run 1 (`2026-10-09_15-16-11`, 256 env × 481 iter, `v=0.15`, `action_step_deg=6.61`):** kẹt ở **đứng chôn chân**.
+  ep length 15 → 185/200; `frc` −0.34 → −0.285 (iter 100) → −0.30; `vel` −0.64 → −0.45 → −0.49; `swing` 0.10 → 0.017 → 0.026; action std 0.98 (gần như không giảm).
+  `frc` khớp dự đoán "hai chân đè đất suốt" (`tan(π/4·−0.5)·~0.66 ≈ −0.28`). Nghi nguyên nhân: thưởng vận tốc σ=0.20 cho đứng yên ~57% điểm tối đa.
+  Còn thiếu trước khi đổi nút: thí nghiệm "trọng tài" (frc từng chân theo `p`, robot đứng, 64 bước) = AC4.3. Play chưa xem.
+- **2026-10-09 — mở phạm vi `scripts/rsl_rl/play.py`** (chỉ phần in log, không đụng vòng điều khiển):
+  dòng 488–489 crash `'int' object has no attribute 'shape'` — `cfg.observation_space`/`action_space` của Direct env là `int`.
+  Lỗi có từ commit `bcdae629` (2026-08-04), không do B5a. Dòng 344–345, 562–566 gọi `obs[60:62]` là "twist progress" — với OFFICIALdesign đó là `[sin, cos]` đồng hồ → đổi nhãn.
+  - [x] AC5b.3: play chạy được với `Official-Walk-v0`; nhãn cột 60–61 không còn ghi "twist". (Claude sửa theo yêu cầu User — ngoại lệ AGENTS §0.)
+- **Play run 1 (bước 100–240):** đồng hồ obs đúng — 5.625°/bước = 64 bước/chu kỳ = 3.2 s; sau timeout bước 200 in `p = 1/64` (reset về 0 một bước trước). Bằng chứng chạy cho AC3.2/3.3.
+  Robot đứng `h ≈ 0.37`, chân chỉ "gõ" 0.05–0.15 s (lịch vung 1.12 s). Chân nhấc **ngược lượt** nhiều hơn: 18 lần sai lượt / 9 lần đúng lượt (yếu, p≈0.06).
+  Nghi: play.py gán `air_time[0]=L` theo vị trí, không theo tên; hoặc nhiễu. **Lịch đối xứng → hoán đổi L/R trong reward không làm hỏng việc học**
+  (chỉ đổi chân đi trước), miễn `frc`, `vel`, `swing_gate` cùng một cách ghép — code đang nhất quán (`[2,0]`, `[3,1]`, gate từ `force_clock`).
+  → AC4.3 **không còn chặn run 2**; vẫn phải pass trước Việc 6 (đặt tên đúng cho firmware/debug).
+  User quan sát (nhìn theo hướng đi): **chân phải thật chống, chân trái thật luôn là chân gõ; robot có tiến lên** → lê chân ăn được điểm vận tốc.
+  ⚠️ `calibration.json` notes: "CAD left is robot right" → body `Footleft` có thể là chân **phải thật**. Dấu `roll` chưa đối chiếu được với khung IMU → gộp vào AC4.3.
+  User quan sát bằng mắt: **lê chân + một chân gõ**. Khớp `vel_score` −0.45 (chân chống trượt) và `roll ≈ −0.09 rad` không đổi (nghiêng hẳn một bên → chân bên nhẹ gõ).
+
+### Việc 5c — Run chẩn đoán 2: cà rốt `swing` (2026-10-09, User chọn)
+Lý do (sổ sách run 1): lê chân lãi ≈ +0.09/bước so với đứng (vận tốc +0.32, phạt đồng hồ −0.23). `swing` là số hạng **duy nhất**
+đòi chân rời đất (`~touching`) **và** đúng lượt (`swing_gate`), nên đứng/lê không ăn được. Hiện trọng số 0.15 × `.mean` → tối đa 0.075, quá nhỏ.
+Loại `have_incentive=True`: thưởng chân chống gánh lực + chân vung chạy nhanh → đứng hết bị phạt, lê đúng lượt được thưởng.
+- `task_walk.py`: đưa `0.15` thành trường cfg `w_swing` (mặc định **0.15** để run 1 tái lập được), reward dùng `self.cfg.w_swing`. Không đổi gì khác.
+- Run 2: `... --max_iterations 500 env.w_swing=1.0` (tối đa thực 0.5/bước; nhấc 1 cm đã ≈ 0.18).
+- [ ] AC5c.1: `grep -n "0.15 \* swing" task_walk.py` → 0; `w_swing: 0.15` có trong `env.yaml` khi chạy không override.
+  **2026-10-09 — User chọn sửa thẳng số `0.15 → 1.0`** thay cho trường cfg. Chấp nhận cho run chẩn đoán.
+  AC5c.1 thay bằng: comment cạnh số ghi giá trị cũ (0.15, run 1) và run 2. Truy vết qua `<run>/git/*.diff` (env.yaml không ghi số gõ cứng).
+  Trước Việc 6: nên đưa lên cfg (`w_swing`) để tune bằng dòng lệnh.
+- **Run 2 `2026-10-09_18-07-07` (`1.0 * swing`), play bước 328–378:** hai chân **luân phiên** gõ (run 1: chỉ một chân) nhưng theo **nhịp riêng 8 bước = 0.4 s**
+  (L nhấc đúng bước 328, 336, 344, 352, 360, 368; R nhấc 2 bước sau), **bỏ qua đồng hồ 3.2 s**: đúng lượt 9 / sai lượt 9. Air ≤ 0.15 s, `h` dao động cùng nhịp 8 bước.
+  Nghi: `T = 3.2 s` chậm gấp ~3 lần nhịp con lắc tự nhiên của chân (`2π√(L/g)` ≈ 1.15 s với L≈0.33) → vung 1.12 s đứng một chân quá khó; gõ nhanh hai chân "rải đều" vẫn trúng cửa sổ gate một phần.
+  → Việc 0 (chọn `T`) quay lại thành nút chính. Chưa có TensorBoard run 2.
+- [ ] AC5c.2: Báo cáo run 2 so với run 1: `swing`, `frc`, `vel`, episode length, play (chân nào nhấc, có đúng lượt, có tiến không).
+
+### Việc M — Giới hạn động cơ theo datasheet, bản "tối đa" (2026-10-09, tạm — sửa lại khi đo A1)
+User yêu cầu: đặt giới hạn sim = **datasheet không tải**, cho policy dùng hết công suất servo, tinh chỉnh sau.
+Nằm ngoài B5a nhưng **chặn Việc 0**: đổi tốc độ trần thì phép tính `T`/`v` của Việc 0 đổi theo.
+
+Datasheet (User, `gaitclockref/note.txt`): STS3120 C001 (Bub/Hip/Knee) 0.454 s/60°; STS3215 (Foot, rotate) 0.222 s/60°.
+
+Mô hình `DCMotorCfg` của Isaac (`actuator_pd.py:299`): `τ_max(ω) = saturation_effort·(1 − ω/velocity_limit)`, cắt ở `effort_limit`.
+→ `velocity_limit` = tốc độ **không tải**, `saturation_effort` = mô-men **kẹt (stall)**. "Có tải chậm hơn" do mô hình **tự sinh ra**.
+**Không** điền tốc độ có tải (~½) vào `velocity_limit` — làm thế là chia đôi hai lần.
+
+Phạm vi được sửa:
+- `assets/officialdesign/meta/calibration.json` → `actuators.heavy`: `servo`, `velocity`, `effort`; `actuators.light`: kiểm lại `effort` theo datasheet STS3215; mục `notes` ghi nguồn số.
+- `interface.py` → `action_step_deg` (trường hợp đồng): `= tốc độ không tải servo chậm nhất / 20 Hz`. Comment ghi phép tính + `TODO: firmware Pi đổi cùng số; giảm lại sau khi đo A1`.
+- `scripts/test_officialdesign_asset.py:49-50`, `scripts/validate_officialdesign.py:38`: đang gõ cứng `10.3 / 2.94 / 4.7` → đọc từ `CALIBRATION` (hợp đồng đổi thật, không phải sửa test cho qua).
+- Chạy lại `prepare_officialdesign.py` rồi `convert_officialdesign.py --headless --force` (robot.py kiểm SHA-256, không chạy là crash lúc load).
+Cấm: đụng `stiffness`, `damping`, `armature` (tuning sim, để sau).
+
+- **2026-10-09 — QA kiểm số User tính:** heavy `2.31 rad/s` ✅, `action_step_deg 6.61` ✅. STS3120 @12V: stall 120 kg·cm = **11.77 N·m**, rated 40 kg·cm = 3.92 N·m.
+  Bản tối đa: `heavy.effort = 11.77` (stall). `TODO` sau A1: tách `effort_limit` = rated, `saturation_effort` = stall (cần sửa `robot.py`, ngoài Việc M).
+  STS3215 @12V: stall 30 kg·cm = **2.94 N·m** (khớp số đang có, giữ nguyên), rated 10 kg·cm = 0.98 N·m.
+  User xác nhận `0.454 s/60° (22 RPM) @12V`. `0.222 s/60°` của STS3215: chưa xác nhận điện áp (`TODO`).
+- [ ] ACM.1: `heavy.servo = "STS3120 C001"`, `heavy.velocity` = rad/s tính từ 0.454 s/60° (ghi phép tính trong `notes`).
+- [ ] ACM.2: `effort` hai nhóm = mô-men kẹt datasheet **ở đúng điện áp đang cấp**, đổi kg·cm → N·m (`× 0.0981`). Ghi điện áp vào `notes`.
+- [ ] ACM.3: `action_step_deg` = `velocity_heavy(°/s) / 20`, có comment phép tính và `TODO` firmware.
+- [ ] ACM.4: 2 test không còn số gõ cứng; `test_officialdesign_asset.py` và `validate_officialdesign.py` pass, dán output.
+  **2026-10-09 — User hoãn ACM.4 để train chẩn đoán (5b) trước.** Được: train không chạy 2 test này.
+  Thay bằng bằng chứng rẻ: `grep` `velocity_limit`/`effort_limit` trong `<run>/params/env.yaml` của run smoke. **ACM.4 phải pass trước Việc 6.**
 
 ### Việc 6 — Train thật & đọc kết quả (sau khi AC0–AC5 pass)
 - Train `--num_envs 2048`, ~1500 iteration. Xem TensorBoard: `frc_score`, `vel_score` phải **tăng về 0** (ít bị phạt hơn).

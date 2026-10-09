@@ -65,6 +65,7 @@ class OfficialWalkEnv(OfficialInterfaceEnv):
             device=self.device,
         )
 
+    # REWARD SHAPING 
     def _get_rewards(self):
         """Track +x walking, upright height and swing clearance, penalize slip/effort."""
         orientation = rpy_xyzw(as_torch(self.robot.data.root_quat_w))
@@ -99,7 +100,17 @@ class OfficialWalkEnv(OfficialInterfaceEnv):
         vel_score = torch.tan((torch.pi / 4.0) * speed_clock * speed_norm).sum(dim=-1)   
         
         feet_z = as_torch(self.robot.data.body_link_pos_w)[:, self.feet_ids, 2] - self.scene.env_origins[:, None, 2]
+        # độ cao của chân: khi chân bay thưởng cả phần nhấc chân
         sole_height = feet_z + self.sole_offsets  # flat-foot approximation of STL sole height
+
+        # hệ số lực âm ở pha cần chân vung -> chuyển thành mức kích hoạt thưởng nhấc chân cao 
+        # force clock: chân cần vung -> hệ số lực = -1, chống hệ số phạt  = 0 => với thưởng nhấc chân cao thì đảo ngược lại giống trị tuyệt đối 
+        swing_gate = (-force_clock).clamp(0.0, 1.0) # thứ tự: trái. phải 
+
+        # điểm nhấc cao: sai lệch so với mục tiêu chân cao 3.5cm, bình phương dể lệch cao hay thấp đều bị giảm , cấu trúc 1/e mũ 
+        height_score = torch.exp(-((sole_height - 0.035) / 0.025)**2)
+        swing = (swing_gate * (~touching) * height_score).mean(dim=-1) # touching: tensor boolean 
+        
         effort = as_torch(self.robot.data.applied_torque)[:, self.joint_ids]
         
         reward = (1.5*torch.exp(-((velocity[:, 0]-self.cfg.target_velocity)/0.20)**2)
@@ -108,15 +119,25 @@ class OfficialWalkEnv(OfficialInterfaceEnv):
                   # thưởng gait clock 
                   + self.cfg.w_clock_frc * frc_score 
                   + self.cfg.w_clock_vel * vel_score
+                  + 1.0 * swing #thưởng khi vung chân cao ở pha nhấc chân
+                  # tăng trọng số swing lên 1, cái cũ là 0.15, kết quả: có tiến bộ, đã nhấc đều 
 
-                  
                   - 0.5*velocity[:, 1].square() - 0.1*gyro[:, 2].square()
                   - 0.2*orientation[:, 2].square() - 0.2*position[:, 1].square()
                   - 0.02*(touching*feet_vel[:, :, :2].square().sum(-1)).sum(-1)
                   - 0.001*effort.square().sum(-1)
                   - 0.02*(self.actions-self.previous_actions).square().sum(-1)
                   - 0.05*((self.cmd_actions-self.base_pose)/45).square().mean(-1))
-        return reward*self.step_dt
+        # Log trung bình toàn batch; không thay đổi reward log ra tensorboard 
+        self.extras["log"] = {
+            "Gait/frc_score": frc_score.mean(),
+            "Gait/vel_score": vel_score.mean(),
+            "Gait/swing": swing.mean(),
+        }
+
+        return reward * self.step_dt
+        
+    
 
     def _get_dones(self):
         height = as_torch(self.robot.data.root_pos_w)[:, 2] - self.scene.env_origins[:, 2]

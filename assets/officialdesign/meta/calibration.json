@@ -11,9 +11,9 @@
   ],
   "actuators": {
     "heavy": {
-      "servo": "STS3095",
-      "effort": 10.3,
-      "velocity": 4.7,
+      "servo": "STS3120C001",
+      "effort": 11.77,
+      "velocity": 2.31,
       "stiffness": 60.0,
       "damping": 1.5,
       "armature": 0.01

@@ -1,0 +1,177 @@
+#usda 1.0
+(
+    customLayerData = {
+        string creator = "URDF USD Converter v0.1.3"
+    }
+    defaultPrim = "OFFICIALdesign"
+    doc = """Generated from Composed Stage of root layer /tmp/tmp0z6_0frr/OFFICIALdesign.usdc
+
+
+Generated from Composed Stage of root layer /tmp/urdf_import_OFFICIALdesign_cuopozqs/usdex_OFFICIALdesign/OFFICIALdesign.usdc
+
+
+Generated from Composed Stage of root layer /tmp/urdf_import_OFFICIALdesign_cuopozqs/temp_OFFICIALdesign/OFFICIALdesign.usd
+
+
+Generated from Composed Stage of root layer /home/lenovo-loq/Desktop/TransformBipedal_Simulation/assets/officialdesign/usd/OFFICIALdesign_1/payloads/base.usd
+"""
+    kilogramsPerUnit = 1
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+
+over "OFFICIALdesign" (
+    prepend apiSchemas = ["IsaacRobotAPI"]
+)
+{
+    custom rel isaac:physics:robotJoints
+    custom rel isaac:physics:robotLinks
+
+    over "Physics"
+    {
+        over "Bubleft_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "Bubright_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "IMUleft_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "IMUright_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "Hipleft_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "Nhat_rotate_left" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "Kneeleft_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "Footleft_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "Hipright_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "rotate_right" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "Kneeright" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "Footright_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+    }
+
+    over "Geometry"
+    {
+        over "Baselink" (
+            prepend apiSchemas = ["IsaacLinkAPI"]
+        )
+        {
+            over "Bubleft" (
+                prepend apiSchemas = ["IsaacLinkAPI"]
+            )
+            {
+                over "Hipleft" (
+                    prepend apiSchemas = ["IsaacLinkAPI"]
+                )
+                {
+                    over "Rotate_left" (
+                        prepend apiSchemas = ["IsaacLinkAPI"]
+                    )
+                    {
+                        over "Kneeleft" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                            over "Footleft" (
+                                prepend apiSchemas = ["IsaacLinkAPI"]
+                            )
+                            {
+                            }
+                        }
+                    }
+                }
+            }
+
+            over "Bubright" (
+                prepend apiSchemas = ["IsaacLinkAPI"]
+            )
+            {
+                over "Hipright" (
+                    prepend apiSchemas = ["IsaacLinkAPI"]
+                )
+                {
+                    over "Rotate_right" (
+                        prepend apiSchemas = ["IsaacLinkAPI"]
+                    )
+                    {
+                        over "Kneeright" (
+                            prepend apiSchemas = ["IsaacLinkAPI"]
+                        )
+                        {
+                            over "Footright" (
+                                prepend apiSchemas = ["IsaacLinkAPI"]
+                            )
+                            {
+                            }
+                        }
+                    }
+                }
+            }
+
+            over "IMUleft" (
+                prepend apiSchemas = ["IsaacLinkAPI"]
+            )
+            {
+            }
+
+            over "IMUright" (
+                prepend apiSchemas = ["IsaacLinkAPI"]
+            )
+            {
+            }
+        }
+    }
+}
+

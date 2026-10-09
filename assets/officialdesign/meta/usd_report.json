@@ -6,9 +6,9 @@
   "floating_base": true,
   "principal_axes": "reconstructed from CSV tensor using Gf row-vector convention",
   "sha256": {
-    "OFFICIALdesign/urdf/OFFICIALdesign.urdf": "dad0d12f599a7a249fc8b4498f46c24ffca76fe7c1c57d61779af8ab0923610f",
-    "meta/calibration.json": "7f25d11c53f59fd3cad37580a19bbdc71b7d8b2418bfb61163dc0504788dc75b",
-    "meta/build_report.json": "4a3fc6520a99148b1c2ffa23e29899965d6cd56b2a2ef358462882f81c1d0fba",
-    "usd/OFFICIALdesign.usd": "923b1e400b2d9a3f309c844a4b0811732de219858c68ce60b695e2d738223f82"
+    "OFFICIALdesign/urdf/OFFICIALdesign.urdf": "5c7dfbbb6d713d39c7f8de64b3ec9348eaf4cd29a5ad148cdcd1d115dffbca40",
+    "meta/calibration.json": "a0afc19f85c706c34b67160d5a759c59a23903ff3ae893f08365141d795d8208",
+    "meta/build_report.json": "fe94e86c5d783675919f597dbecf8f72aefb34b13a671b19b60f40a351a1b0c6",
+    "usd/OFFICIALdesign.usd": "29d0f2db1224a7339b1161354d1e0c741f837669d6444a84beadd7b9ee8dd051"
   }
 }

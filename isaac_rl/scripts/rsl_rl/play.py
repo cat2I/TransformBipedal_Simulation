@@ -343,6 +343,13 @@ OBS_IMU_START   =  0    # 20D imu history
 OBS_JPOS_START  = 20    # 40D joint pos history (4 frames × 10 joints)
 OBS_TWIST_L     = 60    # twist_L progress (1=start/90°, 0=done/0°)
 OBS_TWIST_R     = 61    # twist_R progress
+# OFFICIALdesign cũng có 62D nhưng obs[60:62] là [sin 2πp, cos 2πp] của đồng hồ pha,
+# không phải twist progress. Nhãn in ra chọn theo việc asset có khớp twist hay không.
+
+
+def space_dim(space) -> int:
+    """Direct env cfg ghi space là int (vd 62); env cũ ghi gym Space có .shape."""
+    return space.shape[0] if hasattr(space, "shape") else int(space)
 
 # Offset của frame cuối (newest) trong imu_hist
 _IMU_LAST_FRAME = OBS_IMU_START + 3 * 5   # = 15
@@ -485,8 +492,8 @@ def main(
     print("\n" + "="*75)
     print(
         f"PLAYING {args_cli.task}  |  "
-        f"Obs {env.unwrapped.cfg.observation_space.shape[0]}D  |  "
-        f"Act {env.unwrapped.cfg.action_space.shape[0]}D"
+        f"Obs {space_dim(env.unwrapped.cfg.observation_space)}D  |  "
+        f"Act {space_dim(env.unwrapped.cfg.action_space)}D"
     )
     print(f"Checkpoint: {resume_path}")
 
@@ -561,9 +568,10 @@ def main(
                 # Tiến độ twist — nằm ở obs[60], obs[61], chỉ có khi obs đủ 62D
                 has_prog = p.shape[0] > OBS_TWIST_R
                 if has_prog:
+                    label = "prog" if twist_l_idx is not None else "clock"
                     line += (
-                        f" prog=[{p[OBS_TWIST_L].item():.2f},"
-                        f"{p[OBS_TWIST_R].item():.2f}]"
+                        f" {label}=[{p[OBS_TWIST_L].item():+.2f},"
+                        f"{p[OBS_TWIST_R].item():+.2f}]"
                     )
 
                 line += (

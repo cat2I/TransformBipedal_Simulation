@@ -1,0 +1,333 @@
+#usda 1.0
+(
+    customLayerData = {
+        string creator = "URDF USD Converter v0.1.3"
+    }
+    defaultPrim = "OFFICIALdesign"
+    doc = """Generated from Composed Stage of root layer /tmp/tmp0z6_0frr/OFFICIALdesign.usdc
+
+
+Generated from Composed Stage of root layer /tmp/urdf_import_OFFICIALdesign_cuopozqs/usdex_OFFICIALdesign/OFFICIALdesign.usdc
+
+
+Generated from Composed Stage of root layer /tmp/urdf_import_OFFICIALdesign_cuopozqs/temp_OFFICIALdesign/OFFICIALdesign.usd
+
+
+Generated from Composed Stage of root layer /home/lenovo-loq/Desktop/TransformBipedal_Simulation/assets/officialdesign/usd/OFFICIALdesign_1/payloads/base.usd
+"""
+    kilogramsPerUnit = 1
+    metersPerUnit = 1
+    subLayers = [
+        @./physics.usda@
+    ]
+    upAxis = "Z"
+)
+
+over "OFFICIALdesign"
+{
+    over "Physics"
+    {
+        def MjcActuator "Bubleft_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = 11.770000457763672
+            uniform double mjc:forceRange:min = -11.770000457763672
+            custom rel mjc:target
+            prepend rel mjc:target = </OFFICIALdesign/Physics/Bubleft_joint>
+        }
+
+        def MjcActuator "Hipleft_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = 11.770000457763672
+            uniform double mjc:forceRange:min = -11.770000457763672
+            custom rel mjc:target
+            prepend rel mjc:target = </OFFICIALdesign/Physics/Hipleft_joint>
+        }
+
+        def MjcActuator "Nhat_rotate_left_actuator"
+        {
+            uniform double mjc:forceRange:max = 2.940000057220459
+            uniform double mjc:forceRange:min = -2.940000057220459
+            custom rel mjc:target
+            prepend rel mjc:target = </OFFICIALdesign/Physics/Nhat_rotate_left>
+        }
+
+        def MjcActuator "Kneeleft_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = 11.770000457763672
+            uniform double mjc:forceRange:min = -11.770000457763672
+            custom rel mjc:target
+            prepend rel mjc:target = </OFFICIALdesign/Physics/Kneeleft_joint>
+        }
+
+        def MjcActuator "Footleft_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = 2.940000057220459
+            uniform double mjc:forceRange:min = -2.940000057220459
+            custom rel mjc:target
+            prepend rel mjc:target = </OFFICIALdesign/Physics/Footleft_joint>
+        }
+
+        def MjcActuator "Bubright_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = 11.770000457763672
+            uniform double mjc:forceRange:min = -11.770000457763672
+            custom rel mjc:target
+            prepend rel mjc:target = </OFFICIALdesign/Physics/Bubright_joint>
+        }
+
+        def MjcActuator "Hipright_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = 11.770000457763672
+            uniform double mjc:forceRange:min = -11.770000457763672
+            custom rel mjc:target
+            prepend rel mjc:target = </OFFICIALdesign/Physics/Hipright_joint>
+        }
+
+        def MjcActuator "rotate_right_actuator"
+        {
+            uniform double mjc:forceRange:max = 2.940000057220459
+            uniform double mjc:forceRange:min = -2.940000057220459
+            custom rel mjc:target
+            prepend rel mjc:target = </OFFICIALdesign/Physics/rotate_right>
+        }
+
+        def MjcActuator "Kneeright_actuator"
+        {
+            uniform double mjc:forceRange:max = 11.770000457763672
+            uniform double mjc:forceRange:min = -11.770000457763672
+            custom rel mjc:target
+            prepend rel mjc:target = </OFFICIALdesign/Physics/Kneeright>
+        }
+
+        def MjcActuator "Footright_joint_actuator"
+        {
+            uniform double mjc:forceRange:max = 2.940000057220459
+            uniform double mjc:forceRange:min = -2.940000057220459
+            custom rel mjc:target
+            prepend rel mjc:target = </OFFICIALdesign/Physics/Footright_joint>
+        }
+
+        over "Bubleft_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+        )
+        {
+        }
+
+        over "Bubright_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+        )
+        {
+        }
+
+        over "IMUleft_joint"
+        {
+        }
+
+        over "IMUright_joint"
+        {
+        }
+
+        over "Hipleft_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+        )
+        {
+        }
+
+        over "Nhat_rotate_left" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+        )
+        {
+        }
+
+        over "Kneeleft_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+        )
+        {
+        }
+
+        over "Footleft_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+        )
+        {
+        }
+
+        over "Hipright_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+        )
+        {
+        }
+
+        over "rotate_right" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+        )
+        {
+        }
+
+        over "Kneeright" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+        )
+        {
+        }
+
+        over "Footright_joint" (
+            delete apiSchemas = ["PhysicsDriveAPI:angular", "PhysicsJointStateAPI:angular"]
+        )
+        {
+        }
+    }
+
+    over "Geometry"
+    {
+        over "Baselink"
+        {
+            over "Bubleft"
+            {
+                over "Hipleft"
+                {
+                    over "Rotate_left"
+                    {
+                        over "Kneeleft"
+                        {
+                            over "Footleft"
+                            {
+                                over "Footleft"
+                                {
+                                }
+
+                                over "Footleft_1"
+                                {
+                                }
+                            }
+
+                            over "Kneeleft"
+                            {
+                            }
+
+                            over "Kneeleft_1"
+                            {
+                            }
+                        }
+
+                        over "Rotate_left"
+                        {
+                        }
+
+                        over "Rotate_left_1"
+                        {
+                        }
+                    }
+
+                    over "Hipleft"
+                    {
+                    }
+
+                    over "Hipleft_1"
+                    {
+                    }
+                }
+
+                over "Bubleft"
+                {
+                }
+
+                over "Bubleft_1"
+                {
+                }
+            }
+
+            over "Bubright"
+            {
+                over "Hipright"
+                {
+                    over "Rotate_right"
+                    {
+                        over "Kneeright"
+                        {
+                            over "Footright"
+                            {
+                                over "Footright"
+                                {
+                                }
+
+                                over "Footright_1"
+                                {
+                                }
+                            }
+
+                            over "Kneeright"
+                            {
+                            }
+
+                            over "Kneeright_1"
+                            {
+                            }
+                        }
+
+                        over "Rotate_right"
+                        {
+                        }
+
+                        over "Rotate_right_1"
+                        {
+                        }
+                    }
+
+                    over "Hipright"
+                    {
+                    }
+
+                    over "Hipright_1"
+                    {
+                    }
+                }
+
+                over "Bubright"
+                {
+                }
+
+                over "Bubright_1"
+                {
+                }
+            }
+
+            over "IMUleft"
+            {
+                over "IMUleft"
+                {
+                }
+
+                over "IMUleft_1"
+                {
+                }
+            }
+
+            over "IMUright"
+            {
+                over "IMUright"
+                {
+                }
+
+                over "IMUright_1"
+                {
+                }
+            }
+
+            over "Baselink"
+            {
+            }
+
+            over "Baselink_1"
+            {
+            }
+        }
+    }
+
+    over "Materials"
+    {
+    }
+
+    over "VisualMaterials"
+    {
+    }
+}
+
