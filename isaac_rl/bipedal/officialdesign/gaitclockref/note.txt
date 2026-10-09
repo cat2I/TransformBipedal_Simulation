@@ -1,1 +1,6 @@
 để 1 chu kì đi bộ T = 3.2s, mỗi chân vung 1,12s và chống kép 0,48s 
+Công thức: lấy 60° chia cho thời gian quay 60°.
+
+Servo	Datasheet	Không tải	Có tải (ước ~½)
+STS3120 (Bub/Hip/Knee)	0.454 s/60°	60 / 0.454 ≈ 132°/s	≈ 66°/s
+STS3215 (Foot, twist)	0.222 s/60°	≈ 270°/s	≈ 135°/s

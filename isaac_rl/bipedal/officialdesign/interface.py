@@ -62,13 +62,17 @@ def rpy_xyzw(quat):
 
 
 @configclass
-class OfficialInterfaceCfg(DirectRLEnvCfg):
+class OfficialInterfaceCfg(DirectRLEnvCfg): #giao diện điều khiển chung 
     """Phần cấu hình thuộc hợp đồng. Task kế thừa rồi thêm tham số của riêng nó."""
 
-    decimation = 10
-    action_space = 10
-    observation_space = 60
+    #step_dt = dt * decimation -> dt = 0.005, decimation = 10 -> step_dt = 0.05
+    # tính gait_ste p = step_dt * gait_steps_per_policy_step -> gait_step = 0.05 * 4 = 0.2
+    decimation = 10 #mỗi lần policy đưa action, mô phỏng chạy 10 bước vật lí trc khi sang lượt poli tiếp 
+    action_space = 10 #policy xuất 10 số, mỗi số điều khiển 1 khớp 
+    observation_space = 60 # policy nhận 60 số mỗi lượt 
     state_space = 0
+
+
     sim = sim_utils.SimulationCfg(
         dt=0.005, render_interval=decimation,
         physics=PhysxCfg(gpu_max_soft_body_contacts=2**10, gpu_max_particle_contacts=2**10,
@@ -89,7 +93,9 @@ class OfficialInterfaceCfg(DirectRLEnvCfg):
     servo_min = tuple(j["policy_min_deg"] for j in JOINTS)
     servo_max = tuple(j["policy_max_deg"] for j in JOINTS)
     start_pos = tuple(j["policy_default_deg"] for j in JOINTS)
+
     calibration_status = CALIBRATION["calibration_status"]
+
     asset_sha256 = USD_REPORT["sha256"]
     action_step_deg = 2.0
     actuator_delay_steps = 2  # 10 ms simulation assumption, not measured
@@ -105,7 +111,7 @@ class OfficialInterfaceEnv(DirectRLEnv):
     gọi ``super().__init__()``.
     """
 
-    cfg: OfficialInterfaceCfg
+    cfg: OfficialInterfaceCfg #dựa vào config ở trên  
 
     def __init__(self, cfg, render_mode=None, **kwargs):
         super().__init__(cfg, render_mode, **kwargs)
@@ -113,10 +119,13 @@ class OfficialInterfaceEnv(DirectRLEnv):
         if names != list(self.cfg.joint_names) or len(names) != self.robot.num_joints:
             raise ValueError(f"Unexpected joint mapping: {names}")
         self.imu_id = self.robot.find_bodies("IMUleft")[0][0]
+
+        #giới hạn góc, dấu khớp và tư thế mựac định robot 
         self.servo_min = torch.tensor(self.cfg.servo_min, device=self.device)
         self.servo_max = torch.tensor(self.cfg.servo_max, device=self.device)
         self.signs = torch.tensor(self.cfg.joint_signs, device=self.device)
         self.base_pose = torch.tensor(self.cfg.start_pos, device=self.device, dtype=torch.float32).repeat(self.num_envs, 1)
+        
         if not torch.all((self.base_pose >= self.servo_min) & (self.base_pose <= self.servo_max)):
             raise ValueError("Default pose must lie inside policy angle limits")
         if not 0 <= self.cfg.actuator_delay_steps < self.cfg.decimation:
@@ -161,12 +170,14 @@ class OfficialInterfaceEnv(DirectRLEnv):
     def _get_observations(self):
         # get_observations() can be called twice by a runner; do not shift twice.
         if self._obs_step != self.common_step_counter or self._fresh_reset.any():
-            angles = rpy_xyzw(as_torch(self.robot.data.body_link_quat_w)[:, self.imu_id])[:, :2]
-            gyro = as_torch(self.imu.data.ang_vel_b)
-            angles = angles + torch.randn_like(angles)*self.cfg.orientation_noise_std
-            gyro = gyro + torch.randn_like(gyro)*self.cfg.gyro_noise_std
-            sample = torch.cat((angles.clamp(-1, 1), (gyro/2).clamp(-1, 1)), dim=-1)
-            normalized = self._normalize(self.cmd_actions)
+            # IMU 
+            angles = rpy_xyzw(as_torch(self.robot.data.body_link_quat_w)[:, self.imu_id])[:, :2] # chuyển quat thành rpy -> bỏ yaw
+            gyro = as_torch(self.imu.data.ang_vel_b) #lấy vận tốc góc 
+            angles = angles + torch.randn_like(angles)*self.cfg.orientation_noise_std #nhiễu cảm biến 
+            gyro = gyro + torch.randn_like(gyro)*self.cfg.gyro_noise_std 
+            sample = torch.cat((angles.clamp(-1, 1), (gyro/2).clamp(-1, 1)), dim=-1) # ghép thành 5 giá trị 
+
+            normalized = self._normalize(self.cmd_actions) #ánh xạ action của từng khớp sang -1 1 
             self.imu_history[:, :-1] = self.imu_history[:, 1:].clone()
             self.action_history[:, :-1] = self.action_history[:, 1:].clone()
             self.imu_history[:, -1] = sample

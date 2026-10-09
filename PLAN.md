@@ -36,6 +36,19 @@ Lý do: khớp chỉ đổi tối đa `action_step_deg × 20 Hz = 40°/s`. Chọ
 - Ghi kết quả vào comment cạnh `gait_period_s` kèm `TODO: thay bằng tốc độ servo đo ở A1`.
 - [ ] AC0.1: `gait_period_s` và `swing_ratio` có comment ghi phép tính, không phải số chọn bừa.
   (Gợi ý điểm xuất phát: `T = 1.0 s`, `swing_ratio = 0.35` → chống kép `0.15` mỗi lần.)
+- **2026-10-08 — User đề xuất `T = 3.2 s`, `s = 0.35`** (vung 1.12 s, chống kép 0.48 s). Nhấc chân 3 cm: đủ dư.
+  ⚠️ Còn thiếu ràng buộc **ngang**: chân vung phải đuổi kịp thân. Tốc độ bàn chân so với hông khi vung ≈ `v·(1−s)/s`,
+  tốc độ góc hông ≈ `v·(1−s)/(s·L)` — **không phụ thuộc T**. Với `v=0.15`, `s=0.35`, `L≈0.33 m` → ≈ 48°/s > 40°/s.
+  Bước = `v·T/2` = 24 cm (~0.73·L). User phải tự kiểm lại `L` (trục hip pitch → đế bàn chân trong URDF) và chọn
+  một trong: tăng `s`, giảm `v`, hoặc nâng `action_step_deg` nếu servo thật nhanh hơn (TODO A1). AC0.1 chưa pass.
+- **2026-10-08 — User chọn nâng `action_step_deg`.** Servo thật (theo User): Bub/Hip/Knee = **STS3120 C001**, còn lại = STS3215.
+  ⚠️ `assets/officialdesign/meta/calibration.json` nhóm `heavy` đang ghi **STS3095** (effort 10.3, velocity 4.7) → lệch phần cứng.
+  User tra datasheet STS3120 C001 (tốc độ s/60° và stall torque **ở đúng điện áp đang cấp**) trước khi chọn số.
+  Điều kiện chọn: `action_step_deg × 20 ≥ tốc độ cần / 0.7` (chừa 30%) **và** `≤ tốc độ servo chậm nhất trong các khớp chân, có tải`.
+  `action_step_deg` là trường **hợp đồng** (`interface.py:94`) → firmware Pi đổi cùng số. Ghi phép tính vào comment cạnh nó.
+- **2026-10-09 — User tạm hoãn Việc 0, làm Việc 3 trước.** Được, vì Việc 3 chỉ cần `T` là một biến, không cần giá trị đúng.
+  Điều kiện: `gait_period_s` để giá trị tạm kèm `TODO: Việc 0 chưa chốt`; test AC3.3 tính theo `cfg.gait_period_s`, không gõ cứng số.
+  **Cổng mới: AC0.1 phải pass trước AC5.2 (train smoke) và Việc 6.** Đổi `T` sau khi train = policy cũ vô dụng, phải train lại.
 
 ### Việc 1 — `gait_clock.py`: port `phase_function.py` sang dạng dùng được trên GPU
 Ý tưởng: **không** viết lại PCHIP bằng torch. Lúc khởi tạo, dùng scipy PCHIP tính sẵn
@@ -51,12 +64,15 @@ Yêu cầu:
 - Docstring ghi rõ: dấu −1 phạt / 0 kệ / +1 thưởng, nguồn apex, và vì sao dùng LUT.
 - ⚠️ Trước khi port, so sánh nhánh `grounded` + `have_incentive=False` của **chống kép thứ nhất** (`gaitclockref/phase_function.py` dòng 70–72) với **chống kép thứ hai** (dòng 110–112). Lẽ ra hai khối giống nhau, chỉ khác cột. **Tự tìm chỗ khác**, đừng chép nguyên. AC1.6 sẽ bắt lỗi này.
 
-- [ ] AC1.1: Không import `gaitclockref`, không import `matplotlib`. scipy chỉ dùng lúc dựng bảng.
-- [ ] AC1.2: Mọi giá trị bảng ∈ [−1, 1] (PCHIP không vọt lố).
-- [ ] AC1.3: Tuần hoàn: giá trị tại `p=0` ≈ giá trị tại `p→1` (sai < 1e-3).
-- [ ] AC1.4: Đối xứng: cột trái tại `p` == cột phải tại `p + 0.5` (cả frc lẫn vel).
-- [ ] AC1.5: `grounded`, `have_incentive=False`, giữa pha phải-vung: `r_frc=−1, r_vel=0, l_frc=0, l_vel=−1`.
-- [ ] AC1.6: `grounded`, `have_incentive=False`, giữa chống kép: `r_frc=0, l_frc=0, r_vel=−1, l_vel=−1`.
+- [x] AC1.1: Không import `gaitclockref`, không import `matplotlib`. scipy chỉ dùng lúc dựng bảng.
+- [x] AC1.2: Mọi giá trị bảng ∈ [−1, 1] (PCHIP không vọt lố).
+- [x] AC1.3: Tuần hoàn: giá trị tại `p=0` ≈ giá trị tại `p→1` (sai < 1e-3).
+- [x] AC1.4: Đối xứng: cột trái tại `p` == cột phải tại `p + 0.5` (cả frc lẫn vel).
+- [x] AC1.5: `grounded`, `have_incentive=False`, giữa pha phải-vung: `r_frc=−1, r_vel=0, l_frc=0, l_vel=−1`.
+- [x] AC1.6: `grounded`, `have_incentive=False`, giữa chống kép: `r_frc=0, l_frc=0, r_vel=−1, l_vel=−1`.
+  (Review 2026-10-08, commit `b6b2805`: AC1.2–1.6 do QA chạy thử cả 6 tổ hợp mode×incentive. Việc 2 vẫn phải tự viết script kiểm.)
+- [ ] AC1.7: Có hàm tra `(table (4,N), p (num_envs,)) → (num_envs, 4)`, chạy trên GPU, không vòng lặp Python;
+  `p = 1.0`, `p = 1.3`, `p = −0.2` cho cùng kết quả với `p = 0`, `0.3`, `0.8`. → xem FIX_AFTER_DIFF Lần 3 / F3.1.
 
 ### Việc 2 — `check_gait_clock.py`: kiểm tra offline (chạy không cần Isaac)
 - Kiểm AC1.2–AC1.6 bằng `assert`, in `PASS` từng mục.
@@ -64,6 +80,8 @@ Yêu cầu:
   Đây là lúc dùng matplotlib (chỉ trong script, không trong `gait_clock.py`).
 - [ ] AC2.1: Script chạy exit 0, dán output vào báo cáo.
 - [ ] AC2.2: Ảnh khớp Hình 3 của paper: vùng vung của chân nào thì `frc` của chân đó ở −1; vùng chống thì `vel` ở −1.
+- **2026-10-08 — User quyết định BỎ Việc 2.** AC1.2–1.6 đã được QA kiểm thay (xem trên).
+  Bù lại: bằng chứng AC1.7 (hàm tra, wrap pha) = dán output chạy thử 6 giá trị `p` trong REPL khi nộp diff.
 
 ### Việc 3 — `interface.py`: đồng hồ vào hợp đồng
 - `OfficialInterfaceCfg`: thêm `gait_period_s` (Việc 0), `observation_space = 62`.

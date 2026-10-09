@@ -72,3 +72,29 @@ File tạm agy tạo để đưa diff, không thuộc repo.
 ### Ghi chú (không phải lỗi agy)
 - `transformer_config.py` có diff 146 dòng: đó là User comment khối FullForm111 từ trước PLAN, không phải agy sửa. AC4.3 chấp nhận.
 - Dòng 182–183 `self.orient_noise` / `self.gyro_noise` giờ không còn được dùng (ENV đã lấy std từ cfg). Để nguyên, ngoài phạm vi.
+
+---
+
+## Lần 3 — 2026-10-08 (review commit `b6b2805`, B5a Việc 1 `gait_clock.py`)
+
+Kết quả: logic LUT **đúng**. Bug dòng 72 của apex đã được tránh (`between_swings` grounded = `[inc, −1, inc, −1]`).
+QA chạy thử 6 tổ hợp `stance_mode × have_incentive`: shape `(4, 4096)`, không NaN, min/max ∈ [−1, 1], đối xứng lệch 0.0.
+Dịch chu kỳ đúng 1.0 (apex dịch `last_knot + offset` = cùng giá trị, viết gọn hơn). AC1.1–1.6 **pass**.
+
+### F3.1 — Thiếu hàm tra pha → hệ số
+PLAN Việc 1 yêu cầu "kèm hàm tra `(num_envs,) pha → (num_envs, 4)`". File mới có hàm dựng bảng, chưa có hàm tra.
+Không có hàm này thì Việc 4 (reward) không dùng được bảng.
+- [ ] AC-F3.1 (= PLAN AC1.7): hàm tra vector hoá, wrap được `p ≥ 1` và `p < 0`, trả `(num_envs, 4)` đúng thứ tự cột.
+
+### F3.2 — Comment sai / dở dang
+- Dòng 79: comment ghi "start − offset", code là `starts + offsets`.
+- Dòng 83: câu "làm mượt đoạn chuyển pha thay vì" bị cụt.
+- Dòng 126, 148: dòng `#` rỗng.
+- Dòng 34–42: ghi "hệ số phạt" cho cả hàng, nhưng hàng có cả 0/+1. Ghi "hệ số thưởng/phạt".
+- Dòng 140: "24 mốc mỗi pha" → thực ra 24 mốc cho cả 3 chu kỳ, nội suy cho cả 4 cột.
+- [ ] AC-F3.2: 5 chỗ trên được sửa, không đổi code.
+
+### Ghi chú
+- Việc 0 (phép tính `T`, `swing_ratio`) chưa có kết quả. Không chặn Việc 1, nhưng phải xong trước Việc 3.
+  - (2026-10-09) Nới cổng: Việc 0 phải xong trước **AC5.2 / Việc 6**, không còn chặn Việc 3. Xem PLAN Việc 0.
+  - F3.1 (hàm tra) phải xong trước **Việc 4**. Việc 3 không cần nó.
