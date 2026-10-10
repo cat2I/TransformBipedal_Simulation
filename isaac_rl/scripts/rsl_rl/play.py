@@ -508,6 +508,18 @@ def main(
         )
     else:
         print(f"Khớp xoay: Twistleft=[{twist_l_idx}]  Twistright=[{twist_r_idx}]")
+
+    # Đo lết chân — chỉ task có feet_ids/contact_ids/sole_offsets (Official-Walk) mới đo.
+    # Lết = chân CHẠM đất (cùng định nghĩa reward: lực > 1 N) mà vẫn trượt ngang.
+    measure_slip = all(hasattr(e, k) for k in ("feet_ids", "contact_ids", "sole_offsets"))
+    if measure_slip:
+        from bipedal._shared.lab3 import as_torch
+        d_ground = torch.zeros(2, device=e.device)   # quãng trượt lúc chạm đất [Footleft, Footright]
+        d_air    = torch.zeros(2, device=e.device)   # quãng đi lúc bay
+        h_max    = torch.zeros(2, device=e.device)   # đế chân cao nhất lúc bay
+        n_meas   = 0
+        base_d   = 0.0                               # quãng thân đi ngang, để so với quãng chân
+        print("Đo lết: L = Footleft = chân PHẢI thật (CAD ngược), R = Footright = chân TRÁI thật")
     print("="*75 + "\n")
 
     while simulation_app.is_running():
@@ -603,6 +615,36 @@ def main(
                         print(f"  ⚠  Robot đứng yên quá lâu: {static_t:.2f}s")
 
             obs, _, dones, _ = env.step(actions)
+
+            # step vừa reset thì chân bị dịch chỗ tức thời → bỏ, không tính quãng
+            if measure_slip and not dones[0]:
+                v_xy     = as_torch(e.robot.data.body_link_lin_vel_w)[0, e.feet_ids, :2]
+                speed    = torch.linalg.vector_norm(v_xy, dim=-1)
+                force    = as_torch(e.contact.data.net_forces_w)[0, e.contact_ids]
+                touching = torch.linalg.vector_norm(force, dim=-1) > 1.0
+                sole_h   = (as_torch(e.robot.data.body_link_pos_w)[0, e.feet_ids, 2]
+                            - e.scene.env_origins[0, 2] + e.sole_offsets)
+                d_ground = d_ground + speed * dt * touching
+                d_air    = d_air + speed * dt * (~touching)
+                h_max    = torch.where(~touching, torch.maximum(h_max, sole_h), h_max)
+                base_d  += torch.linalg.vector_norm(as_torch(e.robot.data.root_lin_vel_w)[0, :2]).item() * dt
+                n_meas  += 1
+
+            if measure_slip and n_meas == 200:   # 200 bước = 10 s
+                ratio = d_ground / (d_ground + d_air + 1e-6)
+                print(
+                    f"  >>> LẾT L={ratio[0]*100:3.0f}% R={ratio[1]*100:3.0f}% "
+                    f"| trượt L={d_ground[0]*100:.1f}cm R={d_ground[1]*100:.1f}cm "
+                    f"| bay L={d_air[0]*100:.1f}cm R={d_air[1]*100:.1f}cm "
+                    f"| h_max L={h_max[0]*100:.1f}cm R={h_max[1]*100:.1f}cm "
+                    f"| thân={base_d*100:.0f}cm"
+                )
+                d_ground = torch.zeros_like(d_ground)
+                d_air    = torch.zeros_like(d_air)
+                h_max    = torch.zeros_like(h_max)
+                n_meas   = 0
+                base_d   = 0.0
+
             # MLP thuần của rsl-rl >= 4.0 không có .reset() — chỉ policy hồi quy
             # (RNN/LSTM) mới cần xoá hidden state khi env kết thúc episode.
             if hasattr(policy_nn, "reset"):
